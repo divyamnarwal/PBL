@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO₂ Sensor Dashboard - MQTT</title>
+    <script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.connected {
+            background-color: #4ade80;
+        }
+        
+        .status-indicator.disconnected {
+            background-color: #ef4444;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        
+        .co2-value {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .co2-unit {
+            font-size: 1.2em;
+            color: #999;
+            margin-left: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .status-ok {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-warmup {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .connection-info {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .connection-info input {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+        
+        .connection-info button {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 5px;
+        }
+        
+        .connection-info button:hover {
+            background: #5568d3;
+        }
+        
+        .quality-indicator {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .quality-excellent {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .quality-good {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .quality-moderate {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .quality-unhealthy {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 CO₂ Sensor Dashboard</h1>
+            <p>
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="connectionStatus">Connecting...</span>
+            </p>
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-title">Current CO₂ Level</div>
+                <div>
+                    <span class="co2-value" id="co2Value">--</span>
+                    <span class="co2-unit">ppm</span>
+                </div>
+                <div class="status-badge" id="statusBadge">Waiting...</div>
+                <div class="quality-indicator" id="qualityIndicator">
+                    Air Quality: Waiting for data...
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Sensor Information</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Sensor Type</div>
+                        <div class="info-value" id="sensorType">MH-Z19</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Last Update</div>
+                        <div class="info-value" id="lastUpdate">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Message Count</div>
+                        <div class="info-value" id="messageCount">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Uptime</div>
+                        <div class="info-value" id="uptime">00:00:00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">CO₂ Trend (Last 30 readings)</div>
+                <div class="chart-container">
+                    <canvas id="co2Chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="connection-info">
+            <h3>MQTT Connection Settings</h3>
+            <input type="text" id="mqttBroker" placeholder="MQTT Broker" value="raspberrypi.local">
+            <input type="number" id="mqttPort" placeholder="Port" value="9001">
+            <input type="text" id="mqttTopic" placeholder="Topic" value="sensor/co2">
+            <br>
+            <button onclick="connectMQTT()">Connect</button>
+            <button onclick="disconnectMQTT()">Disconnect</button>
+        </div>
+    </div>
+
+    <script>
+        let mqttClient = null;
+        let chart = null;
+        let messageCount = 0;
+        let startTime = Date.now();
+        const co2Data = [];
+        const timeLabels = [];
+        const maxDataPoints = 30;
+
+        // Initialize Chart.js
+        const ctx = document.getElementById('co2Chart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'CO₂ (ppm)',
+                    data: co2Data,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'CO₂ (ppm)'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const status = document.getElementById('connectionStatus');
+            
+            if (connected) {
+                indicator.className = 'status-indicator connected';
+                status.textContent = 'Connected to MQTT Broker';
+            } else {
+                indicator.className = 'status-indicator disconnected';
+                status.textContent = 'Disconnected';
+            }
+        }
+
+        function updateQualityIndicator(co2) {
+            const indicator = document.getElementById('qualityIndicator');
+            
+            if (co2 === null || co2 === undefined) {
+                indicator.textContent = 'Air Quality: Waiting for data...';
+                indicator.className = 'quality-indicator';
+                return;
+            }
+            
+            if (co2 < 400) {
+                indicator.textContent = 'Air Quality: Excellent';
+                indicator.className = 'quality-indicator quality-excellent';
+            } else if (co2 < 450) {
+                indicator.textContent = 'Air Quality: Good';
+                indicator.className = 'quality-indicator quality-good';
+            } else if (co2 < 550) {
+                indicator.textContent = 'Air Quality: Moderate';
+                indicator.className = 'quality-indicator quality-moderate';
+            } else {
+                indicator.textContent = 'Air Quality: Unhealthy - High CO₂';
+                indicator.className = 'quality-indicator quality-unhealthy';
+            }
+        }
+
+        function updateDashboard(data) {
+            const co2 = data.co2;
+            const status = data.status;
+            const timestamp = data.timestamp || new Date().toISOString();
+            
+            // Update CO2 value
+            document.getElementById('co2Value').textContent = co2 !== null ? co2 : '--';
+            
+            // Update status badge
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = status;
+            statusBadge.className = 'status-badge ';
+            if (status === 'OK') {
+                statusBadge.className += 'status-ok';
+            } else if (status.includes('WARMUP')) {
+                statusBadge.className += 'status-warmup';
+            } else {
+                statusBadge.className += 'status-error';
+            }
+            
+            // Update quality indicator
+            updateQualityIndicator(co2);
+            
+            // Update sensor info
+            document.getElementById('sensorType').textContent = data.sensor || 'MH-Z19';
+            document.getElementById('lastUpdate').textContent = new Date(timestamp).toLocaleTimeString();
+            document.getElementById('messageCount').textContent = ++messageCount;
+            
+            // Update uptime
+            const uptime = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            const seconds = uptime % 60;
+            document.getElementById('uptime').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Update chart
+            if (co2 !== null) {
+                const now = new Date();
+                timeLabels.push(now.toLocaleTimeString());
+                co2Data.push(co2);
+                
+                if (timeLabels.length > maxDataPoints) {
+                    timeLabels.shift();
+                    co2Data.shift();
+                }
+                
+                chart.update();
+            }
+        }
+
+        function connectMQTT() {
+            const broker = document.getElementById('mqttBroker').value || 'raspberrypi.local';
+            const port = parseInt(document.getElementById('mqttPort').value) || 9001;
+            const topic = document.getElementById('mqttTopic').value || 'sensor/co2';
+            
+            // Disconnect existing connection
+            if (mqttClient) {
+                mqttClient.end();
+            }
+            
+            updateConnectionStatus(false);
+            
+            // Connect via WebSocket
+            const wsUrl = `ws://${broker}:${port}/mqtt`;
+            const clientId = 'dashboard_' + Math.random().toString(16).substr(2, 8);
+            
+            mqttClient = mqtt.connect(wsUrl, {
+                clientId: clientId,
+                protocolVersion: 4,
+                reconnectPeriod: 5000,
+                connectTimeout: 10000
+            });
+            
+            mqttClient.on('connect', () => {
+                console.log('Connected to MQTT broker');
+                updateConnectionStatus(true);
+                mqttClient.subscribe(topic, { qos: 1 }, (err) => {
+                    if (err) {
+                        console.error('Subscription error:', err);
+                    } else {
+                        console.log(`Subscribed to topic: ${topic}`);
+                    }
+                });
+            });
+            
+            mqttClient.on('message', (topic, message) => {
+                try {
+                    const data = JSON.parse(message.toString());
+                    console.log('Received:', data);
+                    updateDashboard(data);
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            });
+            
+            mqttClient.on('error', (err) => {
+                console.error('MQTT error:', err);
+                updateConnectionStatus(false);
+            });
+            
+            mqttClient.on('close', () => {
+                console.log('MQTT connection closed');
+                updateConnectionStatus(false);
+            });
+            
+            mqttClient.on('offline', () => {
+                console.log('MQTT client offline');
+                updateConnectionStatus(false);
+            });
+        }
+
+        function disconnectMQTT() {
+            if (mqttClient) {
+                mqttClient.end();
+                mqttClient = null;
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Auto-connect on page load
+        window.addEventListener('load', () => {
+            setTimeout(connectMQTT, 1000);
+        });
+    </script>
+</body>
+</html>
+
