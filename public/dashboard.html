@@ -621,11 +621,12 @@
 // Real-Time CO2 Monitor with MQTT Integration
 import { MQTTService } from '../js/mqtt-service.js';
 import { RealTimeMonitor } from '../js/real-time-monitor.js';
+import { config } from '../js/config.js';
 
-// Configuration
+// Configuration from environment variables
 const MQTT_CONFIG = {
-  brokerUrl: 'ws://localhost:9001', // WebSocket port for MQTT
-  topic: 'sensor/co2',
+  brokerUrl: config.mqtt.brokerUrl,
+  topic: config.mqtt.topic,
   clientId: 'co2-dashboard-' + Math.random().toString(16).slice(2, 10)
 };
 
