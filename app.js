@@ -1,636 +1,765 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Mobile menu toggle
-  const mobileMenuBtn = document.getElementById('mobile-open');
-  const nav = document.querySelector('nav');
-  if (mobileMenuBtn) {
-    mobileMenuBtn.addEventListener('click', () => {
-      nav.classList.toggle('hidden');
-      nav.classList.toggle('flex');
-      nav.classList.toggle('md:hidden');
-      nav.classList.toggle('absolute');
-      nav.classList.toggle('top-16');
-      nav.classList.toggle('left-0');
-      nav.classList.toggle('right-0');
-      nav.classList.toggle('bg-white');
-      nav.classList.toggle('dark:bg-gray-800');
-      nav.classList.toggle('p-4');
-      nav.classList.toggle('flex-col');
-      nav.classList.toggle('items-start');
-      nav.classList.toggle('gap-4');
-    });
-  }
+// ===============================================
+// CARBON NEUTRALITY - MAIN APP.JS
+// ===============================================
 
-  // Tiny helper: smooth active nav links
-  document.querySelectorAll('a.nav-link').forEach(a => {
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      const id = a.getAttribute('href').slice(1);
-      document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+// ===== THEME & NAVIGATION =====
+const htmlEl = document.documentElement;
+const themeToggle = document.getElementById("theme-toggle");
+const iconSun = document.getElementById("icon-sun");
+const iconMoon = document.getElementById("icon-moon");
+const mobileOpen = document.getElementById("mobile-open");
+
+(function initTheme() {
+  const stored = localStorage.getItem("theme") || "light";
+  const isDark = stored === "dark";
+  htmlEl.classList.toggle("dark", isDark);
+  iconSun?.classList.toggle("hidden", !isDark);
+  iconMoon?.classList.toggle("hidden", isDark);
+})();
+
+themeToggle?.addEventListener("click", () => {
+  const nowDark = !htmlEl.classList.contains("dark");
+  htmlEl.classList.toggle("dark", nowDark);
+  localStorage.setItem("theme", nowDark ? "dark" : "light");
+  iconSun?.classList.toggle("hidden", !nowDark);
+  iconMoon?.classList.toggle("hidden", nowDark);
+});
+
+mobileOpen?.addEventListener("click", () => {
+  alert("Mobile navigation drawer coming soon!");
+});
+
+document.querySelectorAll(".nav-link").forEach(link => {
+  link.addEventListener("click", event => {
+    const targetId = link.getAttribute("href");
+    if (!targetId || targetId === "#") return;
+    event.preventDefault();
+    const targetEl = document.querySelector(targetId);
+    if (!targetEl) return;
+    const headerOffset = 80;
+    const top = targetEl.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+    window.scrollTo({ top, behavior: "smooth" });
   });
+});
 
-  // Theme toggle
-  const themeToggle = document.getElementById('theme-toggle');
-  const iconSun = document.getElementById('icon-sun'), iconMoon = document.getElementById('icon-moon');
-  function setDarkTheme() {
-    document.documentElement.classList.add('dark');
-    iconMoon.classList.remove('hidden');
-    iconSun.classList.add('hidden');
-    localStorage.setItem('cn-theme', 'dark');
-  }
-
-  function setLightTheme() {
-    document.documentElement.classList.remove('dark');
-    iconSun.classList.remove('hidden');
-    iconMoon.classList.add('hidden');
-    localStorage.setItem('cn-theme', 'light');
-  }
-
-  function setTheme(dark) {
-    if (dark) {
-      setDarkTheme();
-    } else {
-      setLightTheme();
-    }
-  }
-  const stored = localStorage.getItem('cn-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  setTheme(stored === 'dark');
-  themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-
-  // ---------- DYNAMIC DASHBOARD LOGIC ----------
-  let AQI_TOKEN = "c1ebca30b3f4338ff326ce803a2174bbfe4d66c4";
-
-  // Resolve token from URL (?token=...), then localStorage ('aqi-token').
-  // This avoids leaking the token in the UI and works without a backend.
-  async function fetchApiToken() {
-    const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get('token');
-    const stored = localStorage.getItem('aqi-token');
-    AQI_TOKEN = urlToken || stored || "c1ebca30b3f4338ff326ce803a2174bbfe4d66c4";
-    if (urlToken && urlToken !== stored) {
-      localStorage.setItem('aqi-token', urlToken);
-    }
-    // Provide a tiny helper for manually setting the token via console
-    // Usage: setAqiToken('your-token');
-    window.setAqiToken = (t) => {
-      if (typeof t === 'string' && t.trim()) {
-        localStorage.setItem('aqi-token', t.trim());
-        AQI_TOKEN = t.trim();
-        const cityName = (aqiCityInputEl && aqiCityInputEl.value.trim()) || 'jaipur';
-        fetchAqiData(cityName);
-      }
-    };
-  }
-
-  // Live CO2 Simulation
-  const liveCo2ValueEl = document.getElementById('live-co2-value');
-  const liveCo2StatusEl = document.getElementById('live-co2-status');
-  const quickCo2ValueEl = document.getElementById('quick-co2-value');
-  const quickCo2StatusEl = document.getElementById('quick-co2-status');
-  let currentCo2 = 420;
-
-  function updateCo2Simulation() {
-    currentCo2 += (Math.random() - 0.5) * 4; // Fluctuate
-    if (currentCo2 < 415) currentCo2 = 415;
-    if (currentCo2 > 500) currentCo2 = 500;
-    const co2 = Math.round(currentCo2);
-
-    let statusText, statusColor;
-    if (co2 < 440) { statusText = 'Normal'; statusColor = 'text-green-600'; }
-    else if (co2 < 470) { statusText = 'Elevated'; statusColor = 'text-yellow-500'; }
-    else { statusText = 'High'; statusColor = 'text-red-500'; }
-
-    // Update main dashboard card
-    liveCo2ValueEl.textContent = `${co2} ppm`;
-    liveCo2StatusEl.textContent = statusText;
-    liveCo2StatusEl.className = `font-medium ${statusColor}`;
-
-    // Update hero snapshot card
-    quickCo2ValueEl.textContent = `${co2} ppm`;
-    quickCo2StatusEl.textContent = statusText;
-    quickCo2StatusEl.className = `text-xs mt-1 ${statusColor}`;
-  }
-
-  // Live AQI Fetching
-  const aqiValueContainerEl = document.getElementById('aqi-value-container');
-  const aqiCityEl = document.getElementById('aqi-city');
-  const aqiTimestampEl = document.getElementById('aqi-timestamp');
-  const aqiDominantEl = document.getElementById('aqi-dominant');
-  const aqiCityInputEl = document.getElementById('aqi-city-input');
-  const aqiSearchBtn = document.getElementById('aqi-search');
-  const showPollutantsBtn = document.getElementById('show-pollutants');
-  const pollutantDetailsEl = document.getElementById('pollutant-details');
-  const aqiLoadingOverlay = document.getElementById('aqi-loading-overlay');
-  
-  let currentAqiData = null;
-
-  // Popular cities for autocomplete
-  const popularCities = [
-    'Delhi', 'Mumbai', 'Bangalore', 'Kolkata', 'Chennai', 
-    'Hyderabad', 'Pune', 'Jaipur', 'Lucknow', 'Ahmedabad',
-    'Surat', 'Kanpur', 'Nagpur', 'Patna', 'Indore'
-  ];
-
-  // Create datalist for city suggestions
-  const datalist = document.createElement('datalist');
-  datalist.id = 'city-suggestions';
-  popularCities.forEach(city => {
-    const option = document.createElement('option');
-    option.value = city;
-    datalist.appendChild(option);
+document.querySelectorAll("a[href^='#']").forEach(anchor => {
+  anchor.addEventListener("click", event => {
+    const href = anchor.getAttribute("href");
+    if (!href || href === "#") return;
+    event.preventDefault();
+    const targetEl = document.querySelector(href);
+    if (!targetEl) return;
+    const headerOffset = 80;
+    const top = targetEl.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+    window.scrollTo({ top, behavior: "smooth" });
   });
-  document.body.appendChild(datalist);
-  aqiCityInputEl.setAttribute('list', 'city-suggestions');
+});
 
-  async function fetchAqiData(city) {
-    if (!AQI_TOKEN) {
-        // Graceful placeholder when token is missing; do NOT show any token.
-        aqiCityEl.textContent = (city || '—').toString();
-        aqiTimestampEl.textContent = 'API token missing';
-        aqiDominantEl.textContent = '—';
-        aqiValueContainerEl.textContent = '—';
-        aqiValueContainerEl.className = 'w-28 h-28 rounded-full flex items-center justify-center text-white text-3xl font-bold bg-gray-400';
-        console.warn('AQI token not set. Add ?token=YOUR_TOKEN to the URL or run setAqiToken("YOUR_TOKEN") in the console.');
-        return;
+// ===== AQI DASHBOARD (Legacy API) =====
+const WAQI_TOKEN = "c1ebca30b3f4338ff326ce803a2174bbfe4d66c4"; // Replace with your token from https://aqicn.org/api/
+
+const aqiCityInput = document.getElementById("aqi-city-input");
+const aqiSearchBtn = document.getElementById("aqi-search");
+const aqiValueEl = document.getElementById("aqi-value-container");
+const aqiCityEl = document.getElementById("aqi-city");
+const aqiTimestampEl = document.getElementById("aqi-timestamp");
+const aqiDominantEl = document.getElementById("aqi-dominant");
+const aqiLoadingOverlay = document.getElementById("aqi-loading-overlay");
+const pollutantDetailsEl = document.getElementById("pollutant-details");
+const showPollutantsBtn = document.getElementById("show-pollutants");
+
+const pollutantLabel = {
+  pm25: "PM2.5",
+  pm10: "PM10",
+  carbon_monoxide: "CO",
+  nitrogen_dioxide: "NO",
+  sulphur_dioxide: "SO",
+  ozone: "O"
+};
+
+const fallbackAQI = {
+  jaipur: {
+    location: { name: "Jaipur, India" },
+    aqi: 128,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 94,
+      pm10: 78,
+      carbon_monoxide: 0.5,
+      nitrogen_dioxide: 26,
+      sulphur_dioxide: 11,
+      ozone: 31
     }
-    
-    try {
-      // Show loading overlay
-      if (aqiLoadingOverlay) aqiLoadingOverlay.classList.remove('hidden');
-      
-      aqiCityEl.textContent = "Loading...";
-      const q = encodeURIComponent(city);
-      
-      // For demo purposes, use enhanced mock data with more pollutants
-      if (window.location.protocol === 'file:' || window.USE_MOCK_DATA) {
-        console.log('Using enhanced mock AQI data for demonstration purposes');
-        
-        // Generate more realistic AQI data based on city
-        const cityFactors = {
-          'delhi': { base: 150, variation: 50 },
-          'mumbai': { base: 120, variation: 40 },
-          'bangalore': { base: 80, variation: 30 },
-          'kolkata': { base: 140, variation: 45 },
-          'chennai': { base: 90, variation: 35 },
-          'jaipur': { base: 100, variation: 40 },
-          'default': { base: 85, variation: 25 }
-        };
-        
-        const factor = cityFactors[city.toLowerCase()] || cityFactors.default;
-        const aqi = Math.max(20, Math.min(300, factor.base + (Math.random() - 0.5) * factor.variation));
-        
-        const mockData = {
-          status: 'ok',
-          data: {
-            aqi: Math.round(aqi),
-            idx: Math.floor(Math.random() * 10000),
-            city: { name: city || 'Demo City' },
-            dominentpol: aqi > 150 ? 'pm25' : aqi > 100 ? 'pm10' : 'o3',
-            time: { s: new Date().toISOString() },
-            iaqi: {
-              pm25: { v: Math.max(5, Math.round(aqi * 0.8 + (Math.random() - 0.5) * 20)) },
-              pm10: { v: Math.max(10, Math.round(aqi * 0.6 + (Math.random() - 0.5) * 30)) },
-              o3: { v: Math.max(5, Math.round(aqi * 0.4 + (Math.random() - 0.5) * 15)) },
-              no2: { v: Math.max(5, Math.round(aqi * 0.3 + (Math.random() - 0.5) * 10)) },
-              so2: { v: Math.max(2, Math.round(aqi * 0.2 + (Math.random() - 0.5) * 8)) },
-              co: { v: Math.max(0.5, Number((aqi * 0.15 + (Math.random() - 0.5) * 2).toFixed(1))) },
-              t: { v: Math.round(25 + (Math.random() - 0.5) * 10) },
-              h: { v: Math.round(60 + (Math.random() - 0.5) * 20) },
-              p: { v: Math.round(1013 + (Math.random() - 0.5) * 10) },
-              w: { v: Math.round(5 + Math.random() * 10) },
-              dew: { v: Math.round(20 + (Math.random() - 0.5) * 8) }
-            }
-          }
-        };
-        
-        // Set a small delay to simulate network request
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Process mock data
-        handleAqiResponse(mockData, city);
-        
-        // Set flag to use mock data for all future requests
-        window.USE_MOCK_DATA = true;
-        return;
-      }
-      
-      // Real API request
-      const response = await fetch(`https://api.waqi.info/feed/${q}/?token=${AQI_TOKEN}`);
-      const data = await response.json();
-      
-      handleAqiResponse(data, city);
-    } catch (error) {
-      console.error('AQI Fetch Error:', error);
-      // Hide loading overlay on error
-      if (aqiLoadingOverlay) aqiLoadingOverlay.classList.add('hidden');
-      
-      // Build a comprehensive demo response with all pollutants
-      const demo = {
-        status: 'ok',
-        data: {
-          aqi: 85,
-          idx: 0,
-          city: { name: city || 'Demo City' },
-          dominentpol: 'pm25',
-          time: { s: new Date().toISOString() },
-          iaqi: { 
-            pm25: { v: 85 }, 
-            pm10: { v: 65 }, 
-            o3: { v: 45 }, 
-            no2: { v: 25 }, 
-            so2: { v: 15 }, 
-            co: { v: 5.5 }, 
-            t: { v: 28 }, 
-            h: { v: 65 }, 
-            p: { v: 1015 }, 
-            w: { v: 8 }, 
-            dew: { v: 22 }
-          }
-        }
-      };
-      // Populate the UI using the same handler for consistency
-      handleAqiResponse(demo, city);
-      // Mark mock mode so subsequent requests use demo data quickly
-      window.USE_MOCK_DATA = true;
-    } finally {
-      // Always hide loading overlay
-      if (aqiLoadingOverlay) aqiLoadingOverlay.classList.add('hidden');
+  },
+  delhi: {
+    location: { name: "Delhi, India" },
+    aqi: 182,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 145,
+      pm10: 122,
+      carbon_monoxide: 0.7,
+      nitrogen_dioxide: 48,
+      sulphur_dioxide: 18,
+      ozone: 22
+    }
+  },
+  mumbai: {
+    location: { name: "Mumbai, India" },
+    aqi: 96,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 68,
+      pm10: 82,
+      carbon_monoxide: 0.4,
+      nitrogen_dioxide: 32,
+      sulphur_dioxide: 10,
+      ozone: 28
+    }
+  },
+  bengaluru: {
+    location: { name: "Bengaluru, India" },
+    aqi: 88,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM10",
+    pollutants: {
+      pm25: 54,
+      pm10: 76,
+      carbon_monoxide: 0.3,
+      nitrogen_dioxide: 22,
+      sulphur_dioxide: 7,
+      ozone: 36
+    }
+  },
+  hyderabad: {
+    location: { name: "Hyderabad, India" },
+    aqi: 102,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 73,
+      pm10: 81,
+      carbon_monoxide: 0.4,
+      nitrogen_dioxide: 29,
+      sulphur_dioxide: 9,
+      ozone: 30
+    }
+  },
+  chennai: {
+    location: { name: "Chennai, India" },
+    aqi: 84,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM10",
+    pollutants: {
+      pm25: 52,
+      pm10: 69,
+      carbon_monoxide: 0.3,
+      nitrogen_dioxide: 20,
+      sulphur_dioxide: 6,
+      ozone: 34
+    }
+  },
+  kolkata: {
+    location: { name: "Kolkata, India" },
+    aqi: 165,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 132,
+      pm10: 118,
+      carbon_monoxide: 0.6,
+      nitrogen_dioxide: 44,
+      sulphur_dioxide: 16,
+      ozone: 25
+    }
+  },
+  pune: {
+    location: { name: "Pune, India" },
+    aqi: 92,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 64,
+      pm10: 74,
+      carbon_monoxide: 0.4,
+      nitrogen_dioxide: 24,
+      sulphur_dioxide: 8,
+      ozone: 33
+    }
+  },
+  udaipur: {
+    location: { name: "Udaipur, India" },
+    aqi: 105,
+    timestamp: () => new Date().toISOString(),
+    dominant: "PM2.5",
+    pollutants: {
+      pm25: 76,
+      pm10: 82,
+      carbon_monoxide: 0.4,
+      nitrogen_dioxide: 27,
+      sulphur_dioxide: 9,
+      ozone: 29
     }
   }
-  
-  // Helper function to process API response
-  function handleAqiResponse(data, city) {
-    // Hide loading overlay
-    if (aqiLoadingOverlay) aqiLoadingOverlay.classList.add('hidden');
-    
-    if (data.status === 'ok') {
-      currentAqiData = data.data;
-      const aqi = data.data.aqi;
-      let color = 'bg-gray-400';
-      if (aqi <= 50) color = 'bg-green-500';
-      else if (aqi <= 100) color = 'bg-yellow-500';
-      else if (aqi <= 150) color = 'bg-orange-500';
-      else if (aqi <= 200) color = 'bg-red-500';
-      else color = 'bg-purple-700';
-      
-      aqiValueContainerEl.textContent = aqi;
-      aqiValueContainerEl.className = `w-28 h-28 rounded-full flex items-center justify-center text-white text-3xl font-bold ${color}`;
-      aqiCityEl.textContent = data.data.city?.name?.split(',')[0] || city;
-      const t = data.data.time?.s || data.data.time?.iso || Date.now();
-      aqiTimestampEl.textContent = `Updated: ${new Date(t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-      aqiDominantEl.textContent = data.data.dominentpol ? data.data.dominentpol.toUpperCase() : 'N/A';
-      
-      // Populate and show pollutant details automatically for better UX
-      if (aqiCityInputEl) aqiCityInputEl.value = city;
-      try {
-        // build and reveal pollutant details
-        showPollutantDetails();
-        if (showPollutantsBtn) showPollutantsBtn.textContent = 'Hide';
-      } catch (e) {
-        // if something goes wrong, keep the details hidden but log
-        console.warn('Failed to auto-show pollutant details', e);
-        if (showPollutantsBtn) showPollutantsBtn.textContent = 'Details';
-        pollutantDetailsEl.classList.add('hidden');
-      }
+};
+
+let latestAQIData = null;
+
+function normalizeCityKey(city) {
+  return city.trim().toLowerCase();
+}
+
+function styleAQI(aqi) {
+  if (!isFinite(aqi)) {
+    aqiValueEl.textContent = "-";
+    aqiValueEl.style.backgroundColor = "#6b7280";
+    aqiValueEl.style.color = "#ffffff";
+    return;
+  }
+
+  aqiValueEl.textContent = Math.round(aqi);
+  aqiValueEl.style.color = "#ffffff";
+
+  if (aqi <= 50) aqiValueEl.style.backgroundColor = "#22c55e";
+  else if (aqi <= 100) {
+    aqiValueEl.style.backgroundColor = "#eab308";
+    aqiValueEl.style.color = "#111827";
+  } else if (aqi <= 150) aqiValueEl.style.backgroundColor = "#f97316";
+  else if (aqi <= 200) aqiValueEl.style.backgroundColor = "#ef4444";
+  else if (aqi <= 300) aqiValueEl.style.backgroundColor = "#a855f7";
+  else aqiValueEl.style.backgroundColor = "#7f1d1d";
+}
+
+function renderPollutants(pollutants) {
+  pollutantDetailsEl.innerHTML = "";
+  pollutantDetailsEl.classList.add("hidden");
+  showPollutantsBtn.textContent = "Details";
+
+  if (!pollutants) return;
+  const entries = Object.entries(pollutants).filter(([, value]) => value !== null && isFinite(value));
+  if (!entries.length) return;
+
+  let html = '<div class="grid grid-cols-2 gap-2 text-xs">';
+  entries.forEach(([key, value]) => {
+    const label = pollutantLabel[key] || key;
+    html += `<div><strong>${label}:</strong> ${Number(value).toFixed(1)}</div>`;
+  });
+  html += "</div>";
+  pollutantDetailsEl.innerHTML = html;
+}
+
+async function fetchFromLegacyAPI(city) {
+  const url = `https://api.waqi.info/feed/${encodeURIComponent(city)}/?token=${WAQI_TOKEN}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("AQI service unavailable");
+
+  const payload = await response.json();
+  if (payload.status !== "ok") throw new Error(typeof payload.data === "string" ? payload.data : "City not supported");
+
+  const station = payload.data;
+  const pollutants = {
+    pm25: station.iaqi?.pm25?.v ?? null,
+    pm10: station.iaqi?.pm10?.v ?? null,
+    carbon_monoxide: station.iaqi?.co?.v ?? null,
+    nitrogen_dioxide: station.iaqi?.no2?.v ?? null,
+    sulphur_dioxide: station.iaqi?.so2?.v ?? null,
+    ozone: station.iaqi?.o3?.v ?? null
+  };
+
+  return {
+    aqi: Number(station.aqi),
+    timestamp: station.time?.iso || new Date().toISOString(),
+    location: { name: station.city?.name || city },
+    dominant: station.dominentpol || null,
+    pollutants
+  };
+}
+
+function useFallbackAQI(cityKey) {
+  const fallbackEntry = fallbackAQI[cityKey] || fallbackAQI.jaipur;
+  if (!fallbackEntry) return null;
+
+  return {
+    aqi: fallbackEntry.aqi,
+    timestamp: fallbackEntry.timestamp(),
+    location: fallbackEntry.location,
+    dominant: fallbackEntry.dominant,
+    pollutants: fallbackEntry.pollutants
+  };
+}
+
+async function fetchAQI(city = "Jaipur") {
+  const searchValue = city.trim() || "Jaipur";
+  const normalizedKey = normalizeCityKey(searchValue);
+
+  try {
+    aqiLoadingOverlay?.classList.remove("hidden");
+    if (aqiSearchBtn) {
+      aqiSearchBtn.disabled = true;
+      aqiSearchBtn.textContent = "Loading";
+    }
+
+    const apiResult = await fetchFromLegacyAPI(searchValue);
+    latestAQIData = apiResult;
+
+    styleAQI(apiResult.aqi);
+    aqiCityEl.textContent = apiResult.location.name;
+    aqiTimestampEl.textContent = `Updated: ${new Date(apiResult.timestamp).toLocaleString()}`;
+
+    if (apiResult.dominant) {
+      const dominantKey = apiResult.dominant.toLowerCase();
+      const label = pollutantLabel[dominantKey] || apiResult.dominant.toUpperCase();
+      aqiDominantEl.textContent = label;
     } else {
-      aqiCityEl.textContent = city || 'Error';
-      aqiTimestampEl.textContent = `Error: ${data.data || 'Invalid response'}`;
-      console.error('AQI API Error:', data);
+      aqiDominantEl.textContent = "-";
     }
-  }
-  
-  // Build pollutant details HTML but do not toggle visibility. Called after fetch to populate grid.
-  function buildPollutantDetails() {
-    if (!pollutantDetailsEl) return;
-    if (!currentAqiData) {
-      pollutantDetailsEl.innerHTML = '<h4 class="text-sm font-medium mb-2 border-t dark:border-gray-700 pt-3">Pollutant Details</h4><div class="text-center col-span-2">No AQI data available</div>';
+
+    renderPollutants(apiResult.pollutants);
+  } catch (error) {
+    console.error("AQI fetch error:", error);
+
+    const fallback = useFallbackAQI(normalizedKey);
+    if (fallback) {
+      latestAQIData = fallback;
+      styleAQI(fallback.aqi);
+      aqiCityEl.textContent = `${fallback.location.name} (cached)`;
+      aqiTimestampEl.textContent = `Cached: ${new Date(fallback.timestamp).toLocaleString()}`;
+      aqiDominantEl.textContent = fallback.dominant || "-";
+      renderPollutants(fallback.pollutants);
       return;
     }
 
-    const iaqi = currentAqiData.iaqi || {};
-    const pollutantNames = {
-      pm25: 'PM<sub>2.5</sub>',
-      pm10: 'PM<sub>10</sub>',
-      o3: 'Ozone (O<sub>3</sub>)',
-      no2: 'NO<sub>2</sub>',
-      so2: 'SO<sub>2</sub>',
-      co: 'CO',
-      t: 'Temperature',
-      h: 'Humidity (%)',
-      p: 'Pressure (hPa)',
-      w: 'Wind (m/s)',
-      dew: 'Dew Point (°C)'
-    };
-
-    const items = [];
-    items.push(`<div class="p-2 border rounded dark:border-gray-700 flex justify-between col-span-2 bg-green-50 dark:bg-gray-800"><span><strong>Overall AQI:</strong></span><span class="font-bold">${currentAqiData.aqi}</span></div>`);
-
-    const pollutants = Object.entries(iaqi).map(([k, v]) => ({ k, v: v?.v })).sort((a, b) => (b.v || 0) - (a.v || 0));
-    if (pollutants.length === 0) {
-      items.push('<div class="p-2 col-span-2 text-center">No pollutant readings available</div>');
-    } else {
-      pollutants.forEach(p => {
-        const name = pollutantNames[p.k] || p.k.toUpperCase();
-        const val = (p.v === undefined || p.v === null) ? 'N/A' : Number(p.v).toFixed(3);
-        items.push(`<div class="p-2 border rounded dark:border-gray-700 flex justify-between"><span>${name}:</span><span class="font-medium">${val}</span></div>`);
-      });
+    aqiValueEl.textContent = "?";
+    aqiValueEl.style.backgroundColor = "#6b7280";
+    aqiValueEl.style.color = "#ffffff";
+    aqiCityEl.textContent = "Unable to fetch AQI";
+    aqiTimestampEl.textContent = error.message || "Please try a different city";
+    aqiDominantEl.textContent = "-";
+    pollutantDetailsEl.innerHTML = "";
+  } finally {
+    aqiLoadingOverlay?.classList.add("hidden");
+    if (aqiSearchBtn) {
+      aqiSearchBtn.disabled = false;
+      aqiSearchBtn.textContent = "Search";
     }
-
-    if (currentAqiData.forecast && currentAqiData.forecast.daily) {
-      const pm25f = currentAqiData.forecast.daily.pm25?.[0]?.avg || 'N/A';
-      const pm10f = currentAqiData.forecast.daily.pm10?.[0]?.avg || 'N/A';
-      const o3f = currentAqiData.forecast.daily.o3?.[0]?.avg || 'N/A';
-      items.push(`<div class="p-2 border rounded dark:border-gray-700 col-span-2 mt-2"><div class="text-xs text-gray-500 mb-1">Tomorrow's Forecast:</div><div class="text-sm">PM2.5: ${pm25f} | PM10: ${pm10f} | O3: ${o3f}</div></div>`);
-    }
-
-    pollutantDetailsEl.innerHTML = `
-      <h4 class="text-sm font-medium mb-2 border-t dark:border-gray-700 pt-3">Pollutant Details</h4>
-      <div id="pollutant-grid" class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        ${items.join('\n')}
-      </div>
-    `;
   }
+}
 
-  // Show pollutant details (toggle will call this). Keeps logic separate.
-  function showPollutantDetails() {
-    buildPollutantDetails();
-    pollutantDetailsEl.classList.remove('hidden');
-  }
-  
-  // Add real-time update functionality
-  let autoRefreshInterval = null;
-  const startAutoRefresh = () => {
-    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-    autoRefreshInterval = setInterval(() => {
-      const currentCity = aqiCityInputEl.value.trim() || 'jaipur';
-      fetchAqiData(currentCity);
-    }, 300000); // Refresh every 5 minutes
-  };
-
-  const stopAutoRefresh = () => {
-    if (autoRefreshInterval) {
-      clearInterval(autoRefreshInterval);
-      autoRefreshInterval = null;
-    }
-  };
-
-  // Add auto-refresh toggle button
-  const refreshBtn = document.createElement('button');
-  refreshBtn.id = 'auto-refresh-toggle';
-  refreshBtn.className = 'ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600';
-  refreshBtn.textContent = 'Auto Refresh: OFF';
-  refreshBtn.onclick = () => {
-    if (autoRefreshInterval) {
-      stopAutoRefresh();
-      refreshBtn.textContent = 'Auto Refresh: OFF';
-      refreshBtn.className = 'ml-2 px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600';
-    } else {
-      startAutoRefresh();
-      refreshBtn.textContent = 'Auto Refresh: ON';
-      refreshBtn.className = 'ml-2 px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600';
-    }
-  };
-
-  // Insert the auto-refresh button after the search button
-  if (aqiSearchBtn && aqiSearchBtn.parentNode) {
-    aqiSearchBtn.parentNode.insertBefore(refreshBtn, aqiSearchBtn.nextSibling);
-  }
-  
-  if (aqiCityInputEl) {
-    aqiCityInputEl.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const cityName = aqiCityInputEl.value.trim();
-        console.log('Enter key pressed, city:', cityName);
-        if (cityName) {
-          fetchAqiData(cityName);
-        }
-      }
-    });
-  }
-  
-  if (showPollutantsBtn) {
-    showPollutantsBtn.addEventListener('click', () => {
-      // Rebuild details on each click to ensure latest data is shown
-      const isHidden = pollutantDetailsEl.classList.contains('hidden');
-      if (isHidden) {
-        buildPollutantDetails();
-        pollutantDetailsEl.classList.remove('hidden');
-        showPollutantsBtn.textContent = 'Hide';
-      } else {
-        pollutantDetailsEl.classList.add('hidden');
-        showPollutantsBtn.textContent = 'Details';
-      }
-    });
-  }
-
-  // ---------- Mini charts ----------
-  const miniCtx = document.getElementById('mini-forecast').getContext('2d');
-  new Chart(miniCtx, { 
-    type: 'line', 
-    data: { 
-      labels: ['-4', '-3', '-2', '-1', 'now'], 
-      datasets: [{ 
-        label: 'CO₂ (ppm)', 
-        data: [410, 412, 419, 420, 421], 
-        fill: true, 
-        borderColor: 'rgb(75, 192, 192)', 
-        tension: 0.1 
-      }] 
-    }, 
-    options: { 
-      responsive: true, 
-      plugins: { 
-        legend: { 
-          display: false 
-        } 
-      } 
-    } 
-  });
-  const dashCtx = document.getElementById('dashboard-forecast').getContext('2d');
-  new Chart(dashCtx, { type: 'bar', data: { labels: ['M1', 'M2', 'M3', 'M4'], datasets: [{ label: 'Projected CO₂e', data: [800, 820, 780, 760], backgroundColor: 'rgba(75, 192, 192, 0.2)', borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
-
-  // --------- Footprint calculator logic ----------
-  const EF_CAR_KM = 0.00018, EF_FLIGHT_HOUR = 0.09, EF_ELECTRICITY_INR = 0.00085 / 8;
-  const EF_DIET = { 'meat-high': 3.3, 'meat-medium': 2.5, 'meat-low': 1.9, 'vegetarian': 1.7, 'vegan': 1.5 };
-  const EF_SHOP = 0.00004;
-  
-  // Slider UI Polish
-  const sliders = [
-    { id: 'fp-car-kms', valId: 'fp-car-kms-val', unit: ' km' },
-    { id: 'fp-flights', valId: 'fp-flights-val', unit: ' hrs' },
-    { id: 'fp-electricity', valId: 'fp-electricity-val', unit: '' },
-    { id: 'fp-shopping', valId: 'fp-shopping-val', unit: '' }
-  ];
-  sliders.forEach(slider => {
-    const el = document.getElementById(slider.id);
-    const valEl = document.getElementById(slider.valId);
-    if (el) {
-        el.addEventListener('input', () => {
-            valEl.textContent = el.value;
-        });
-    }
-  });
-
-  function calcFootprint() {
-    const carKms = Number(document.getElementById('fp-car-kms').value);
-    const flights = Number(document.getElementById('fp-flights').value);
-    const elec = Number(document.getElementById('fp-electricity').value);
-    const shop = Number(document.getElementById('fp-shopping').value);
-    const diet = document.getElementById('fp-diet').value;
-    const transport = carKms * 52 * EF_CAR_KM + flights * EF_FLIGHT_HOUR;
-    let energy = elec * 12 * EF_ELECTRICITY_INR;
-    const dietVal = EF_DIET[diet] || 2.5;
-    const cons = shop * 12 * EF_SHOP;
-    const total = transport + energy + dietVal + cons;
-    document.getElementById('fp-total').textContent = total.toFixed(2) + ' t CO₂e';
-    // tips
-    const tipsEl = document.getElementById('fp-tips');
-    const tips = [];
-    if (carKms > 100) tips.push('Try carpooling or use public transit for regular commutes.');
-    if (flights > 10) tips.push('Reduce flights: consider trains or hybrid meeting options.');
-    if (elec > 3000) tips.push('Consider energy efficient appliances or rooftop solar.');
-    tipsEl.innerHTML = tips.map(t => '<div>• ' + t + '</div>').join('');
-    // chart
-    const ctx = document.getElementById('fp-chart').getContext('2d');
-    if (window.fpChart) window.fpChart.destroy();
-    window.fpChart = new Chart(ctx, { 
-      type: 'doughnut', 
-      data: { 
-        labels: ['Transport', 'Energy', 'Diet', 'Consumption'], 
-        datasets: [{ 
-          data: [transport, energy, dietVal, cons],
-          backgroundColor: [
-            'rgba(59, 130, 246, 0.8)',  // Blue
-            'rgba(34, 197, 94, 0.8)',   // Green
-            'rgba(249, 115, 22, 0.8)',  // Orange
-            'rgba(168, 85, 247, 0.8)'   // Purple
-          ]
-        }] 
-      }, 
-      options: { 
-        responsive: true,
-        plugins: {
-          legend: {
-            labels: {
-              color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151'
-            }
-          }
-        }
-      } 
-    });
-  }
-
-  document.getElementById('fp-calc').addEventListener('click', (e) => { e.preventDefault(); calcFootprint(); });
-
-  // ---------- Travel planner logic ----------
-  const CITY_COORDS = { Jaipur: [26.9124, 75.7873], Delhi: [28.6139, 77.2090], Mumbai: [19.0760, 72.8777], Bengaluru: [12.9716, 77.5946], Udaipur: [24.5854, 73.7125] };
-  const EF = { flight_short: 0.158, flight_long: 0.110, train: 0.041, bus: 0.089, car_petrol: 0.192, car_diesel: 0.171, car_cng: 0.132, car_ev: 0.050 };
-
-  function haversine(a, b) { const toR = Math.PI / 180; const dLat = (b[0] - a[0]) * toR; const dLon = (b[1] - a[1]) * toR; const R = 6371; const x = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * toR) * Math.cos(b[0] * toR) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
-
-  let legs = [];
-  const tTableBody = document.querySelector('#t-table tbody');
-  const tChartCtx = document.getElementById('t-chart').getContext('2d');
-  let tChart;
-
-  function renderLegs() {
-    tTableBody.innerHTML = '';
-    legs.forEach((l, i) => {
-      const tr = document.createElement('tr'); tr.className = 'border-b dark:border-gray-700';
-      tr.innerHTML = `<td class="py-2 px-1">${l.origin}→${l.dest}</td><td class="py-2 px-1">${l.mode}</td><td class="py-2 px-1">${l.km}</td><td class="py-2 px-1">${l.kg}</td><td class="py-2 px-1"><button data-i="${i}" class="del text-red-600">Remove</button></td>`;
-      tTableBody.appendChild(tr);
-    });
-    document.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', (e) => { legs.splice(Number(e.target.dataset.i), 1); updatePlan(); }));
-  }
-
-  function getRoundTripMultiplier(round) {
-    return round === 'round' ? 2 : 1;
-  }
-
-  function computeTrip(origin, dest, mode, round) {
-    const a = CITY_COORDS[origin], b = CITY_COORDS[dest];
-    const km = Math.round(haversine(a, b));
-    const multiplier = getRoundTripMultiplier(round);
-    let kg = 0;
-    if (mode === 'flight') {
-      const type = km < 1500 ? 'short' : 'long';
-      const ef = EF['flight_' + type];
-      kg = km * ef * multiplier;
-    } else if (mode === 'train') {
-      kg = km * EF.train * multiplier;
-    } else if (mode === 'bus') {
-      kg = km * EF.bus * multiplier;
-    } else if (mode === 'car') {
-      kg = km * EF.car_petrol * multiplier;
-    }
-    return { km, kg: Math.round(kg * 10) / 10 };
-  }
-
-  function updatePlan() {
-    renderLegs();
-    // summary
-    const months = Number(document.getElementById('t-months').value) || 6;
-    const totalPerMonth = legs.reduce((s, l) => s + (l.kg * (Number(l.trips) || 1)), 0);
-    document.getElementById('t-total').textContent = Math.round(totalPerMonth) + ' kg / month';
-    // chart: monthly projection for months horizon
-    const labels = Array.from({ length: months }, (_, i) => 'M' + (i + 1));
-    const datasets = [];
-    const modeMap = {};
-    legs.forEach(l => {
-      const mLabel = l.mode.toUpperCase();
-      if (!modeMap[mLabel]) modeMap[mLabel] = Array(labels.length).fill(0);
-      const perMonth = l.kg * (Number(l.trips) || 1);
-      modeMap[mLabel] = modeMap[mLabel].map(v => v + perMonth);
-    });
-    Object.entries(modeMap).forEach(([k, v], i) => datasets.push({ label: k, data: v }));
-    if (tChart) tChart.destroy();
-    tChart = new Chart(tChartCtx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: true }, y: { stacked: true } } } });
-    // recs simple
-    const recsEl = document.getElementById('t-recs');
-    const recs = [];
-    const flightShare = legs.filter(l => l.mode === 'flight').reduce((s, l) => s + l.kg, 0);
-    if (flightShare > 0) recs.push('Consider swapping short flights (<800 km) with train for large savings.');
-    if (legs.some(l => l.mode === 'car')) recs.push('Carpooling can reduce per-person emissions significantly.');
-    recsEl.innerHTML = recs.map(r => '<li>' + r + '</li>').join('') || '<li>Add a trip to get recommendations.</li>';
-    // quick counters update
-    document.getElementById('quick-trip-count').textContent = legs.length + ' legs';
-    // insights update
-    document.getElementById('ins-forecast').textContent = Math.round((totalPerMonth * months)) + ' kg';
-    document.getElementById('ins-trees').textContent = Math.round((totalPerMonth * months) / 20) + ' trees';
-    document.getElementById('ins-top').textContent = legs.length ? legs.sort((a, b) => b.kg - a.kg)[0].mode.toUpperCase() : '—';
-    document.getElementById('ins-tip').textContent = recs[0] || 'Add a trip to see tips.';
-  }
-
-  document.getElementById('t-add').addEventListener('click', (e) => {
-    e.preventDefault();
-    const origin = document.getElementById('t-origin').value;
-    const dest = document.getElementById('t-dest').value;
-    const mode = document.getElementById('t-mode').value;
-    const trips = Number(document.getElementById('t-trips').value) || 1;
-    const round = document.getElementById('t-round').value;
-    const months = Number(document.getElementById('t-months').value) || 6;
-    const trip = computeTrip(origin, dest, mode, round);
-    trip.origin = origin; trip.dest = dest; trip.mode = mode; trip.trips = trips; trip.months = months;
-    legs.push(trip);
-    updatePlan();
-  });
-
-  document.getElementById('t-clear').addEventListener('click', (e) => { e.preventDefault(); legs = []; updatePlan(); });
-
-  // init
-  calcFootprint();
-  updatePlan();
-  setInterval(updateCo2Simulation, 3000); // Start CO2 simulation
-
-  // Fetch API token first, then fetch AQI data
-  fetchApiToken().then(() => {
-    fetchAqiData('jaipur'); // Fetch initial AQI data for Jaipur
-  });
-  
-  // Initialize the city input with default value
-  if (aqiCityInputEl) {
-    aqiCityInputEl.value = 'jaipur';
-  }
-
+aqiSearchBtn?.addEventListener("click", () => {
+  fetchAQI(aqiCityInput?.value || "Jaipur");
 });
+
+aqiCityInput?.addEventListener("keypress", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    fetchAQI(aqiCityInput.value || "Jaipur");
+  }
+});
+
+showPollutantsBtn?.addEventListener("click", () => {
+  if (!latestAQIData) return;
+  pollutantDetailsEl.classList.toggle("hidden");
+  showPollutantsBtn.textContent = pollutantDetailsEl.classList.contains("hidden") ? "Details" : "Hide Details";
+});
+
+fetchAQI("Jaipur");
+
+// ===== LIVE CO2 SENSOR (SIMULATED) =====
+const liveCO2ValueEl = document.getElementById("live-co2-value");
+const liveCO2StatusEl = document.getElementById("live-co2-status");
+
+function updateLiveCO2() {
+  if (!liveCO2ValueEl || !liveCO2StatusEl) return;
+
+  const base = 410;
+  const variance = (Math.random() - 0.5) * 120;
+  const reading = Math.round(base + variance);
+
+  requestAnimationFrame(() => {
+    liveCO2ValueEl.textContent = `${reading} ppm`;
+    if (reading < 420) {
+      liveCO2StatusEl.textContent = "Normal";
+      liveCO2StatusEl.className = "font-medium text-green-600";
+    } else if (reading < 550) {
+      liveCO2StatusEl.textContent = "Moderate";
+      liveCO2StatusEl.className = "font-medium text-yellow-600";
+    } else {
+      liveCO2StatusEl.textContent = "High";
+      liveCO2StatusEl.className = "font-medium text-red-600";
+    }
+  });
+}
+
+updateLiveCO2();
+setInterval(updateLiveCO2, 5000);
+
+// ===== CHART HELPERS =====
+const miniForecastCtx = document.getElementById("mini-forecast");
+const dashboardForecastCtx = document.getElementById("dashboard-forecast");
+const footprintChartCtx = document.getElementById("fp-chart");
+const travelChartCtx = document.getElementById("t-chart");
+
+let miniForecastChart;
+let dashboardForecastChart;
+let footprintChart;
+let travelChart;
+
+function createMiniForecastChart() {
+  if (!miniForecastCtx) return;
+  miniForecastChart?.destroy();
+
+  miniForecastChart = new Chart(miniForecastCtx, {
+    type: "bar",
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      datasets: [{
+        data: [120, 150, 180, 140, 160, 190],
+        backgroundColor: "#10b981",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      aspectRatio: 2,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function createDashboardForecastChart() {
+  if (!dashboardForecastCtx) return;
+  dashboardForecastChart?.destroy();
+
+  const labels = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const values = labels.map(() => Math.random() * 250 + 100);
+
+  dashboardForecastChart = new Chart(dashboardForecastCtx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: "#10b981",
+        backgroundColor: "rgba(16, 185, 129, 0.12)",
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      aspectRatio: 2,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+createMiniForecastChart();
+createDashboardForecastChart();
+
+// ===== FOOTPRINT CALCULATOR =====
+const fpCarEl = document.getElementById("fp-car-kms");
+const fpCarValEl = document.getElementById("fp-car-kms-val");
+const fpFlightsEl = document.getElementById("fp-flights");
+const fpFlightsValEl = document.getElementById("fp-flights-val");
+const fpElectricityEl = document.getElementById("fp-electricity");
+const fpElectricityValEl = document.getElementById("fp-electricity-val");
+const fpShoppingEl = document.getElementById("fp-shopping");
+const fpShoppingValEl = document.getElementById("fp-shopping-val");
+const fpDietEl = document.getElementById("fp-diet");
+const fpCalcBtn = document.getElementById("fp-calc");
+const fpTotalEl = document.getElementById("fp-total");
+const fpTipsEl = document.getElementById("fp-tips");
+
+[fpCarEl, fpFlightsEl, fpElectricityEl, fpShoppingEl].forEach(input => {
+  input?.addEventListener("input", updateRangeLabels);
+});
+
+function updateRangeLabels() {
+  if (fpCarEl && fpCarValEl) fpCarValEl.textContent = fpCarEl.value;
+  if (fpFlightsEl && fpFlightsValEl) fpFlightsValEl.textContent = fpFlightsEl.value;
+  if (fpElectricityEl && fpElectricityValEl) fpElectricityValEl.textContent = fpElectricityEl.value;
+  if (fpShoppingEl && fpShoppingValEl) fpShoppingValEl.textContent = fpShoppingEl.value;
+}
+
+updateRangeLabels();
+
+function calculateFootprint() {
+  if (!fpCarEl || !fpFlightsEl || !fpElectricityEl || !fpShoppingEl || !fpDietEl || !fpTotalEl || !fpTipsEl) return;
+
+  const car = Number(fpCarEl.value);
+  const flights = Number(fpFlightsEl.value);
+  const electricity = Number(fpElectricityEl.value);
+  const shopping = Number(fpShoppingEl.value);
+  const diet = fpDietEl.value;
+
+  const carEmission = (car * 52 * 0.12) / 1000;
+  const flightEmission = flights * 0.09;
+  const electricityEmission = (electricity * 12 * 0.82) / 1000;
+  const shoppingEmission = (shopping * 12 * 0.5) / 1000;
+
+  const dietEmissionMap = {
+    "meat-high": 3.3,
+    "meat-medium": 2.5,
+    "meat-low": 1.9,
+    vegetarian: 1.5,
+    vegan: 1.0
+  };
+  const dietEmission = dietEmissionMap[diet] ?? 2.0;
+
+  const totals = {
+    car: carEmission,
+    flight: flightEmission,
+    electricity: electricityEmission,
+    shopping: shoppingEmission,
+    diet: dietEmission
+  };
+
+  const total = Object.values(totals).reduce((sum, value) => sum + value, 0);
+  fpTotalEl.textContent = `${total.toFixed(2)} t CO2e / yr`;
+
+  const tips = [];
+  if (car > 300) tips.push("Consider carpooling or switching commute modes.");
+  if (flights > 20) tips.push("Try consolidating trips or exploring rail alternatives.");
+  if (electricity > 6000) tips.push("Upgrade to energy-efficient appliances.");
+  if (diet === "meat-high") tips.push("Swap a few meat meals for plant-based options each week.");
+  fpTipsEl.innerHTML = tips.length ? tips.join("<br>") : "Great job! Your footprint is relatively low.";
+
+  footprintChart?.destroy();
+  if (!footprintChartCtx) return;
+
+  footprintChart = new Chart(footprintChartCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Car", "Flights", "Electricity", "Shopping", "Diet"],
+      datasets: [{
+        data: [totals.car, totals.flight, totals.electricity, totals.shopping, totals.diet],
+        backgroundColor: ["#ef4444", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { font: { size: 10 }, boxWidth: 10, padding: 8 }
+        }
+      }
+    }
+  });
+}
+
+fpCalcBtn?.addEventListener("click", event => {
+  event.preventDefault();
+  updateRangeLabels();
+  calculateFootprint();
+});
+
+calculateFootprint();
+
+// ===== TRAVEL PLANNER =====
+const tOriginEl = document.getElementById("t-origin");
+const tDestEl = document.getElementById("t-dest");
+const tModeEl = document.getElementById("t-mode");
+const tTripsEl = document.getElementById("t-trips");
+const tRoundEl = document.getElementById("t-round");
+const tMonthsEl = document.getElementById("t-months");
+const tAddBtn = document.getElementById("t-add");
+const tClearBtn = document.getElementById("t-clear");
+const tTableBody = document.querySelector("#t-table tbody");
+const tTotalEl = document.getElementById("t-total");
+const tRecsEl = document.getElementById("t-recs");
+
+let travelLegs = [];
+
+const distances = {
+  "Jaipur-Mumbai": 1150,
+  "Jaipur-Delhi": 280,
+  "Jaipur-Bengaluru": 2050,
+  "Jaipur-Udaipur": 400,
+  "Delhi-Mumbai": 1400,
+  "Delhi-Bengaluru": 2150,
+  "Delhi-Udaipur": 650,
+  "Mumbai-Bengaluru": 980,
+  "Mumbai-Udaipur": 750,
+  "Bengaluru-Udaipur": 1650
+};
+
+const emissionRates = {
+  flight: 0.255,
+  train: 0.041,
+  car: 0.192,
+  bus: 0.089
+};
+
+function getDistance(origin, dest) {
+  const direct = `${origin}-${dest}`;
+  const reverse = `${dest}-${origin}`;
+  return distances[direct] ?? distances[reverse] ?? 500;
+}
+
+function computeLegEmission(origin, dest, mode, roundTrip) {
+  const distance = getDistance(origin, dest);
+  const factor = emissionRates[mode] ?? emissionRates.flight;
+  return distance * factor * (roundTrip ? 2 : 1);
+}
+tAddBtn?.addEventListener("click", () => {
+  if (!tOriginEl || !tDestEl || !tModeEl || !tTripsEl || !tRoundEl || !tMonthsEl) return;
+  if (tOriginEl.value === tDestEl.value) {
+    alert("Origin and destination cannot be the same.");
+    return;
+  }
+
+  const leg = {
+    id: Date.now(),
+    origin: tOriginEl.value,
+    dest: tDestEl.value,
+    mode: tModeEl.value,
+    trips: Math.max(Number(tTripsEl.value) || 1, 1),
+    months: Math.min(Math.max(Number(tMonthsEl.value) || 1, 1), 12),
+    roundTrip: tRoundEl.value === "round"
+  };
+
+  leg.distance = getDistance(leg.origin, leg.dest);
+  leg.emissionPerTrip = computeLegEmission(leg.origin, leg.dest, leg.mode, leg.roundTrip);
+
+  travelLegs.push(leg);
+  renderTravelTable();
+  updateTravelSummary();
+});
+
+tClearBtn?.addEventListener("click", () => {
+  travelLegs = [];
+  renderTravelTable();
+  updateTravelSummary();
+});
+
+window.removeTravelLeg = function (id) {
+  travelLegs = travelLegs.filter(leg => leg.id !== id);
+  renderTravelTable();
+  updateTravelSummary();
+};
+
+function renderTravelTable() {
+  if (!tTableBody) return;
+  tTableBody.innerHTML = "";
+
+  travelLegs.forEach((leg, idx) => {
+    const row = document.createElement("tr");
+    row.className = "border-b dark:border-gray-700 text-sm";
+    row.innerHTML = `
+      <td class="py-2">${idx + 1}</td>
+      <td>${leg.origin} to ${leg.dest}<div class="text-xs text-gray-500">${leg.mode}, ${leg.roundTrip ? "Round" : "One-way"}</div></td>
+      <td>${leg.distance} km</td>
+      <td>${leg.emissionPerTrip.toFixed(1)} kg</td>
+      <td><button class="text-red-600 text-xs" onclick="removeTravelLeg(${leg.id})">Remove</button></td>
+    `;
+    tTableBody.appendChild(row);
+  });
+}
+
+function updateTravelSummary() {
+  if (!tTotalEl || !tRecsEl) return;
+
+  const total = travelLegs.reduce((sum, leg) => sum + leg.emissionPerTrip * leg.trips * leg.months, 0);
+  tTotalEl.textContent = `${total.toFixed(1)} kg CO2e`;
+
+  const recs = [];
+  if (travelLegs.some(leg => leg.mode === "flight")) recs.push("Consider rail for short-haul trips to cut emissions.");
+  if (travelLegs.some(leg => leg.mode === "car")) recs.push("Try carpooling or switching to bus for regular routes.");
+  if (total > 1500) recs.push("High travel footprint detected. Explore virtual meetings or fewer trips.");
+  tRecsEl.innerHTML = recs.length ? recs.map(r => `<li>${r}</li>`).join("") : "<li>Plan looks efficient!</li>";
+
+  renderTravelChart();
+  updateInsights(total);
+}
+
+function renderTravelChart() {
+  if (!travelChartCtx) return;
+  travelChart?.destroy();
+  if (!travelLegs.length) return;
+
+  const maxMonths = Math.max(...travelLegs.map(leg => leg.months));
+  const labels = Array.from({ length: maxMonths }, (_, idx) => `M${idx + 1}`);
+  const series = labels.map((_, idx) => {
+    const monthIdx = idx + 1;
+    return travelLegs.reduce((sum, leg) => sum + (monthIdx <= leg.months ? leg.emissionPerTrip * leg.trips : 0), 0);
+  });
+
+  travelChart = new Chart(travelChartCtx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{ data: series, backgroundColor: "#3b82f6", borderRadius: 6 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      aspectRatio: 1.4,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+const quickTripCountEl = document.getElementById("quick-trip-count");
+const quickCO2ValueEl = document.getElementById("quick-co2-value");
+const quickCO2StatusEl = document.getElementById("quick-co2-status");
+
+function updateQuickStats() {
+  if (quickTripCountEl) quickTripCountEl.textContent = `${travelLegs.length} legs`;
+  if (quickCO2ValueEl && liveCO2ValueEl) quickCO2ValueEl.textContent = liveCO2ValueEl.textContent;
+  if (quickCO2StatusEl && liveCO2StatusEl) quickCO2StatusEl.textContent = liveCO2StatusEl.textContent;
+}
+
+setInterval(updateQuickStats, 2500);
+
+const insightsForecastEl = document.getElementById("ins-forecast");
+const insightsTreesEl = document.getElementById("ins-trees");
+const insightsTopEl = document.getElementById("ins-top");
+const insightsTipEl = document.getElementById("ins-tip");
+
+function updateInsights(totalTravel) {
+  if (insightsForecastEl) insightsForecastEl.textContent = `${totalTravel.toFixed(0)} kg`;
+  if (insightsTreesEl) insightsTreesEl.textContent = `${Math.ceil(totalTravel / 20)} trees`;
+
+  if (insightsTopEl) {
+    if (!travelLegs.length) {
+      insightsTopEl.textContent = "NA";
+    } else {
+      const top = travelLegs.reduce((max, leg) => {
+        const legTotal = leg.emissionPerTrip * leg.trips * leg.months;
+        return !max || legTotal > max.total ? { name: `${leg.mode} (${leg.origin} to ${leg.dest})`, total: legTotal } : max;
+      }, null);
+      insightsTopEl.textContent = top?.name ?? "NA";
+    }
+  }
+
+  if (insightsTipEl) {
+    insightsTipEl.textContent = totalTravel > 800
+      ? "Swap high-emission legs with trains or buses to cut travel emissions quickly."
+      : "Great job! Keep monitoring and balancing travel plans.";
+  }
+}
+
+console.log("Carbon Neutrality app initialized");
