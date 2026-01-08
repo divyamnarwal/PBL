@@ -1,145 +1,52 @@
-# 🚀 Quick Start Guide - Secure Configuration
+# Carbon Neutrality Monitoring System 🌱
 
-## ✅ **What Just Changed:**
+## Overview
+The Carbon Neutrality Monitoring System is a web-based project developed as part of a Project-Based Learning (PBL) initiative at Manipal University Jaipur. The project focuses on monitoring and analyzing carbon emissions to support sustainability and carbon neutrality goals.
 
-All secrets have been moved from source code to environment variables for better security!
+## Problem Statement
+Carbon emissions are a major contributor to climate change. Tracking and analyzing emission data is essential for understanding environmental impact and taking informed steps toward sustainability. This project aims to provide a basic system for collecting, managing, and visualizing carbon-related data.
 
-### 📁 **New Files Created:**
+## Features
+- Collection and storage of carbon emission data
+- Basic data processing and analysis
+- Web-based interface for viewing and managing data
+- Structured backend logic for handling records
 
-1. **`.env`** - Your actual secrets (⚠️ NOT tracked in Git)
-2. **`.env.example`** - Template for team members
-3. **`js/config.js`** - Configuration loader
-4. **`vite.config.js`** - Vite build configuration
-5. **`package.json`** - Node.js dependencies
-6. **`docs/ENVIRONMENT.md`** - Detailed setup guide
+## Tech Stack
+- HTML  
+- CSS  
+- JavaScript  
+- Java / Backend Logic (if applicable)  
+- NoSQL Database  
+- Git & GitHub  
 
-### 🔒 **Security Improvements:**
+## My Contributions
+- Designed and implemented core backend logic
+- Worked on data handling and storage using NoSQL concepts
+- Developed parts of the web interface
+- Managed version control using Git and GitHub
+- Collaborated as part of a team under the PBL framework
 
-| Before | After |
-|--------|-------|
-| ❌ Secrets in `firebase.js` | ✅ Secrets in `.env` (gitignored) |
-| ❌ Committed to Git | ✅ Never committed (safe!) |
-| ❌ Hard to change per environment | ✅ Easy per-environment config |
+## How to Run the Project
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/divyamnarwal/PBL.git
+Navigate to the project directory
 
----
+Open the frontend files in a browser
+(or add backend steps if applicable)
 
-## 🏃 **Quick Setup (2 Options)**
+Future Improvements
 
-### **Option 1: Direct Browser (No Build Tool)**
-✅ **Works now without any changes!**
+Improved UI/UX
 
-The app uses fallback values from `js/config.js` so it still works when opening files directly.
+Advanced data visualization
 
-**Steps:**
-1. Open `public/dashboard.html` directly in browser
-2. Everything works as before (fallback values used)
+Integration with real-time data sources
 
-**Note:** Not recommended for production deployment.
+Enhanced scalability and performance
 
----
+Author
 
-### **Option 2: Vite Dev Server (Recommended - Secure)**
-✅ **Loads secrets from `.env` file**
-
-**Steps:**
-
-```powershell
-# 1. Install Node.js dependencies
-npm install
-
-# 2. Verify .env file exists with your secrets
-# (Already created with your Firebase config!)
-notepad .env
-
-# 3. Start Vite dev server
-npm run dev
-```
-
-The app will open at `http://localhost:3000` with full .env support! 🎉
-
----
-
-## 📋 **For Team Members / New Setup:**
-
-If someone clones this repo, they need to:
-
-```powershell
-# 1. Copy the example file
-Copy-Item .env.example .env
-
-# 2. Edit with their Firebase credentials
-notepad .env
-
-# 3. Install and run
-npm install
-npm run dev
-```
-
----
-
-## 🔐 **Your `.env` File:**
-
-Already created with your current Firebase config:
-
-```env
-VITE_FIREBASE_API_KEY=REDACTED_API_KEY
-VITE_FIREBASE_AUTH_DOMAIN=carbon-neutrality-bea37.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=carbon-neutrality-bea37
-...
-```
-
-✅ **Safe** - This file is in `.gitignore` and won't be committed!
-
----
-
-## 🧪 **Testing:**
-
-### Test Direct Browser Access (Fallback Mode):
-```powershell
-Start-Process "d:\carbon-frontend\public\dashboard.html"
-```
-Should work with fallback values from `config.js`
-
-### Test Vite Dev Server (Secure Mode):
-```powershell
-npm run dev
-```
-Should work with values from `.env` file
-
----
-
-## 🎯 **What This Solves:**
-
-1. ✅ **Security:** No more secrets in Git history
-2. ✅ **Flexibility:** Different configs for dev/prod
-3. ✅ **Team Collaboration:** Easy onboarding with `.env.example`
-4. ✅ **Best Practices:** Industry-standard approach
-5. ✅ **Future-Proof:** Ready for CI/CD deployment
-
----
-
-## 🚨 **IMPORTANT:**
-
-If you've already committed secrets to Git before:
-
-```powershell
-# Remove .env from Git if accidentally added
-git rm --cached .env
-
-# Verify .gitignore contains .env
-git status
-# Should show: .env (untracked)
-
-# Commit the security improvements
-git add .
-git commit -m "feat: move secrets to .env for security"
-git push
-```
-
-**Consider rotating your Firebase keys** if they were exposed in Git history.
-
----
-
-## 📚 **Need More Details?**
-
-See `docs/ENVIRONMENT.md` for complete documentation!
+Divyam Narwal
+Computer Science Undergraduate, Manipal University Jaipu
