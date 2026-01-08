@@ -197,6 +197,7 @@ class RealTimeMonitor {
       case 'connected':
         this.elements.statusIndicator.classList.add('connected');
         this.elements.statusText.textContent = message || 'Connected';
+        this.tryExpandSection();
         break;
       case 'connecting':
       case 'reconnecting':
@@ -243,6 +244,18 @@ class RealTimeMonitor {
     }
     if (this.elements.sensorStatus) {
       this.elements.sensorStatus.textContent = data.status === 'OK' ? '✓ Active' : data.status;
+    }
+
+    // Auto-expand section when data arrives
+    this.tryExpandSection();
+  }
+
+  /**
+   * Try to expand the real-time monitor section if data is available
+   */
+  tryExpandSection() {
+    if (typeof window.SectionStateManager !== 'undefined' && window.SectionStateManager.sections) {
+      window.SectionStateManager.expandSection('real-time-monitor');
     }
   }
 
