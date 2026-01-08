@@ -106,11 +106,12 @@
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           console.log("Account created successfully:", userCredential.user);
-          successMsg.textContent = "Account created! Redirecting to login...";
+          successMsg.textContent = "Account created! Redirecting to dashboard...";
           successMsg.classList.remove("hidden");
-          
+
+          // Auto-login and redirect to dashboard after account creation
           setTimeout(() => {
-            window.location.href = "login.html";
+            window.location.href = "dashboard.html";
           }, 1500);
         })
         .catch((error) => {

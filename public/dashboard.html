@@ -650,35 +650,35 @@ async function initializeMonitor() {
   
   // Try to connect to MQTT broker
   try {
-    mqttService = new MQTTService(MQTT_CONFIG.brokerUrl, MQTT_CONFIG.clientId);
-    
+    mqttService = new MQTTService(MQTT_CONFIG);
+
     // Set up event listeners
-    mqttService.on('message', (topic, message) => {
-      console.log('📨 MQTT message received:', message);
-      monitor.handleData(message);
+    mqttService.onMessage((data) => {
+      console.log('📨 MQTT message received:', data);
+      monitor.handleData(data);
     });
-    
-    mqttService.on('status', (status) => {
-      console.log('🔌 MQTT status:', status);
-      if (status.connected) {
+
+    mqttService.onStatus((status, message) => {
+      console.log('🔌 MQTT status:', status, message);
+      if (status === 'connected') {
         monitor.updateStatus('connected', 'Connected to MQTT Broker');
         isSimulationMode = false;
         stopSimulation();
       } else {
-        monitor.updateStatus('disconnected', status.message || 'Disconnected');
+        monitor.updateStatus('disconnected', message || 'Disconnected');
         if (!isSimulationMode) {
           console.log('⚠️ MQTT connection failed, starting simulation mode...');
           startSimulation();
         }
       }
     });
-    
+
     // Connect to MQTT broker
     await mqttService.connect();
-    
-    // Subscribe to CO2 sensor topic
-    await mqttService.subscribe(MQTT_CONFIG.topic);
-    
+
+    // Subscribe is handled automatically in connect(), but we can call explicitly if needed
+    // mqttService.subscribe(MQTT_CONFIG.topic);
+
     console.log('✅ Connected to MQTT broker!');
     
   } catch (error) {
@@ -736,6 +736,6 @@ if (document.readyState === 'loading') {
   initializeMonitor();
 }
 </script>
-<script src="../app.js"></script>
+<script type="module" src="/app.js"></script>
 </body>
 </html>
