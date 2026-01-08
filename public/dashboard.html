@@ -119,6 +119,18 @@
     #t-chart {
       max-height: 220px !important;
     }
+
+    /* Section container backgrounds */
+    .section-container {
+      background-color: transparent;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 0;
+    }
+
+    .dark .section-container {
+      background-color: transparent;
+    }
     
     /* ========== Real-Time CO2 Monitor Styles ========== */
     
@@ -174,6 +186,177 @@
     canvas:not([height]) {
       height: auto !important;
     }
+    
+    /* Collapsible Section Styles */
+    .collapsible-section {
+      border: 1px solid #e5e7eb;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      margin-bottom: 2rem;
+    }
+    
+    .collapsible-section:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .dark .collapsible-section {
+      border-color: #374151;
+      background: #1f2937;
+    }
+    
+    .dark .collapsible-section:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    }
+    
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease, padding 0.2s ease;
+      border-bottom: 1px solid #f3f4f6;
+      background: linear-gradient(to bottom, #ffffff, #fafbfc);
+    }
+    
+    .dark .collapsible-header {
+      border-bottom: 1px solid #374151;
+      background: linear-gradient(to bottom, #1f2937, #1a202c);
+    }
+    
+    .collapsible-header:hover {
+      background-color: #f9fafb;
+    }
+    
+    .dark .collapsible-header:hover {
+      background-color: #1f2937;
+    }
+    
+    .collapsible-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      letter-spacing: -0.025em;
+      line-height: 1.3;
+      position: relative;
+      display: inline-block;
+      padding-left: 0;
+      transition: padding-left 0.3s ease;
+    }
+
+    .collapsible-header h2::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 0;
+      background: linear-gradient(to bottom, #10b981, #059669);
+      border-radius: 2px;
+      transition: height 0.3s ease;
+    }
+
+    .collapsible-header:hover h2 {
+      padding-left: 0.5rem;
+    }
+
+    .collapsible-header:hover h2::before {
+      height: 100%;
+    }
+    
+    .dark .collapsible-header h2 {
+      color: #f9fafb;
+    }
+
+    .dark .collapsible-header h2::before {
+      background: linear-gradient(to bottom, #10b981, #059669);
+    }
+    
+    .collapsible-header .subtitle {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+      font-weight: 400;
+    }
+    
+    .dark .collapsible-header .subtitle {
+      color: #9ca3af;
+    }
+    
+    .collapsible-header .preview {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-top: 0.75rem;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: opacity 0.2s ease, height 0.2s ease;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+    
+    .dark .collapsible-header .preview {
+      color: #6b7280;
+    }
+    
+    .collapsible-section.collapsed .collapsible-header .preview {
+      opacity: 1;
+      height: auto;
+      margin-top: 0.75rem;
+    }
+    
+    .collapsible-icon {
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+      color: #6b7280;
+    }
+    
+    .dark .collapsible-icon {
+      color: #9ca3af;
+    }
+    
+    .collapsible-section.collapsed .collapsible-icon {
+      transform: rotate(-90deg);
+    }
+    
+    .collapsible-content {
+      max-height: 10000px;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      opacity: 1;
+    }
+    
+    .collapsible-section.collapsed .collapsible-content {
+      max-height: 0;
+      opacity: 0;
+    }
+    
+    .collapsible-inner {
+      padding: 2rem 2rem 2rem 2rem;
+    }
+
+    /* Section Divider */
+    .section-divider {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent);
+      position: relative;
+      opacity: 0.6;
+    }
+
+    .dark .section-divider {
+      background: linear-gradient(to right, transparent, #374151 20%, #374151 80%, transparent);
+    }
   </style>
 </head>
 <body class="bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
@@ -184,12 +367,12 @@
 
   <div id="main-app" style="display:block;">
 
-  <header class="sticky top-0 z-40 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+  <header class="sticky top-0 z-40 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-800/50 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-4">
           <a href="#" class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center shadow-md text-white font-bold">CN</div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center shadow-md text-white font-bold">CN</div>
             <div class="hidden sm:block">
               <div class="text-lg font-semibold">Carbon Neutrality</div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Measure · Plan · Act</div>
@@ -224,35 +407,36 @@
     <div class="max-w-6xl mx-auto px-4 py-12 md:py-20">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div>
-          <h1 class="text-3xl md:text-5xl font-extrabold leading-tight">Carbon Neutrality — <span class="text-green-600">Measure</span> · <span class="text-blue-500">Plan</span> · <span class="text-gray-700 dark:text-gray-100">Act</span></h1>
+          <h1 class="text-3xl md:text-5xl font-extrabold leading-tight">Carbon Neutrality — <span class="text-gray-700 dark:text-gray-100">Measure</span> · <span class="text-gray-700 dark:text-gray-100">Plan</span> · <span class="text-gray-700 dark:text-gray-100">Act</span></h1>
           <p class="mt-4 text-gray-600 dark:text-gray-300 max-w-xl">Interactive tools for estimating your current footprint, planning low-carbon trips, and forecasting future emissions — designed for demos, reports, and real-world decision-making.</p>
           <div class="mt-6 flex gap-3">
             <a href="#calculator" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700">Calculate Footprint</a>
-            <a href="#travel" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg shadow hover:bg-gray-50">Plan a Trip</a>
+            <a href="#travel" class="bg-white dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50 px-4 py-2 rounded-lg shadow-md hover:bg-gray-50 transition-all">Plan a Trip</a>
           </div>
-          <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border"><div class="text-xs text-gray-400">Avg India / yr</div><div class="font-bold">~2 t CO₂e</div></div>
-            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border"><div class="text-xs text-gray-400">Demo Ready</div><div class="font-bold">IoT + ML</div></div>
-            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border"><div class="text-xs text-gray-400">Forecast</div><div class="font-bold">Monthly</div></div>
-            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border"><div class="text-xs text-gray-400">Export</div><div class="font-bold">PDF / CSV</div></div>
+          <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50"><div class="text-xs text-gray-400">Avg India / yr</div><div class="font-bold">~2 t CO₂e</div></div>
+            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50"><div class="text-xs text-gray-400">Demo Ready</div><div class="font-bold">IoT + ML</div></div>
+            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50"><div class="text-xs text-gray-400">Forecast</div><div class="font-bold">Monthly</div></div>
+            <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50"><div class="text-xs text-gray-400">Export</div><div class="font-bold">PDF / CSV</div></div>
           </div>
         </div>
 
         <div class="relative">
-          <div class="rounded-2xl p-6 bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-gray-900 shadow-lg border">
+          <div class="rounded-2xl p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 shadow-xl border border-gray-100/50 dark:border-gray-700/50">
             <h3 class="text-lg font-semibold">Quick Snapshot</h3>
-            <div class="mt-4 grid grid-cols-2 gap-4">
-              <div class="p-4 bg-white dark:bg-gray-800 rounded-lg border">
-                <div class="text-xs text-gray-400">Live CO₂</div>
-                <div id="quick-co2-value" class="text-2xl font-bold mt-2">...</div>
-                <div id="quick-co2-status" class="text-xs mt-1">Loading...</div>
+            <div class="mt-4 grid grid-cols-2 gap-5">
+              <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                <div class="text-[10px] text-gray-400 font-light uppercase tracking-wide">Live CO₂</div>
+                <div id="quick-co2-value" class="text-3xl font-black mt-1">...</div>
+                <div id="quick-co2-status" class="text-[10px] text-gray-400 font-light mt-1">Loading...</div>
               </div>
-              <div class="p-4 bg-white dark:bg-gray-800 rounded-lg border">
-                <div class="text-xs text-gray-400">Your Plan</div>
-                <div class="text-2xl font-bold mt-2" id="quick-trip-count">0 legs</div>
-                <div class="text-xs text-gray-400 mt-1">Add a trip to begin</div>
+              <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                <div class="text-[10px] text-gray-400 font-light uppercase tracking-wide">Your Plan</div>
+                <div class="text-3xl font-black mt-1" id="quick-trip-count">0 legs</div>
+                <div class="text-[10px] text-gray-400 font-light mt-1">Add a trip to begin</div>
               </div>
               <div class="col-span-2 mt-2">
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 italic mb-2">Add trips to see your forecast</div>
                 <canvas id="mini-forecast" height="120"></canvas>
               </div>
             </div>
@@ -264,176 +448,196 @@
 
   <main class="max-w-6xl mx-auto px-4 space-y-12 pb-16">
 
-    <section id="dashboard" class="pt-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <h2 class="text-xl font-semibold">AQI & Emissions Dashboard</h2>
-          <div class="flex items-center gap-2">
-            <input id="aqi-city-input" type="text" placeholder="Enter city name" class="px-3 py-1.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-green-500 outline-none text-sm">
-            <button id="aqi-search" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-700 disabled:bg-gray-400">Search</button>
-          </div>
-        </div>
-
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div id="aqi-card" class="p-4 rounded-lg bg-white dark:bg-gray-900 border shadow-sm flex flex-col justify-between">
+    <section id="dashboard" class="pt-10">
+      <div class="section-container">
+        <div class="collapsible-section" data-section="dashboard">
+          <div class="collapsible-header">
             <div>
-              <div class="text-xs text-gray-400">AQI (Air Quality Index)</div>
-              <div class="mt-2 flex items-center gap-4">
-                <div id="aqi-value-container" class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">...</div>
-                <div class="flex-grow">
-                  <div id="aqi-city" class="font-semibold text-lg">Loading...</div>
-                  <div id="aqi-timestamp" class="text-xs text-gray-500">...</div>
-                  <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">Dominant: <span id="aqi-dominant" class="font-semibold">...</span></div>
+              <h2>Air Quality Monitor</h2>
+              <div class="subtitle">Real-time air quality and emission forecasts</div>
+              <div class="preview">Live air quality and monthly AQI forecast</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <input id="aqi-city-input" type="text" placeholder="Enter city name" class="flex-1 md:w-64 px-4 py-2.5 border border-gray-200/50 dark:border-gray-600/50 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm transition-all">
+              <button id="aqi-search" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors shadow-md">Search</button>
+              <svg class="collapsible-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="collapsible-content">
+            <div class="collapsible-inner">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div id="aqi-card" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100/50 dark:border-gray-700/50 flex flex-col">
+                    <div class="flex items-start gap-5 flex-grow">
+                      <div id="aqi-value-container" class="w-32 h-32 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white text-6xl font-black shadow-lg flex-shrink-0">...</div>
+                      <div class="flex-grow flex flex-col justify-center space-y-1">
+                        <div id="aqi-city" class="text-xl font-semibold text-gray-800 dark:text-gray-100">Loading...</div>
+                        <div id="aqi-status" class="text-sm font-medium text-gray-600 dark:text-gray-400">Checking air quality...</div>
+                        <div class="text-[10px] text-gray-400 font-light">
+                          <span>Dominant: </span>
+                          <span id="aqi-dominant" class="font-normal">...</span>
+                        </div>
+                        <div id="aqi-timestamp" class="text-[10px] text-gray-400 font-light">...</div>
+                      </div>
+                    </div>
+                    <div id="pollutant-details" class="mt-5 hidden">
+                      <div class="pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+                        <div class="text-[10px] font-light text-gray-400 uppercase tracking-wide">Pollutant Breakdown</div>
+                        <div id="pollutant-breakdown" class="grid grid-cols-2 gap-3"></div>
+                      </div>
+                    </div>
+                    <button id="show-pollutants" class="mt-auto pt-4 text-sm text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors">View Details</button>
+                  </div>
+
+                  <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100/50 dark:border-gray-700/50 flex flex-col">
+                    <div class="mb-5">
+                      <div class="text-[10px] font-light text-gray-400 uppercase tracking-wide">Monthly Emission Forecast</div>
+                      <div class="text-[10px] text-gray-400 font-light">Projected CO₂ emissions for next 6 months</div>
+                    </div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 italic mb-2">Search a city to see forecast data</div>
+                    <div class="flex-grow flex items-center justify-center">
+                      <canvas id="dashboard-forecast" height="160"></canvas>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="mt-4">
-              <button id="show-pollutants" class="text-sm text-green-600 hover:underline">Details</button>
-              <div id="pollutant-details" class="mt-3 hidden">
-              </div>
-            </div>
-          </div>
-
-          <div class="p-4 rounded-lg bg-white dark:bg-gray-900 border shadow-sm">
-            <div class="text-xs text-gray-400">Live CO₂</div>
-            <div id="live-co2-value" class="mt-2 text-3xl font-bold">...</div>
-            <div class="text-sm text-gray-500 mt-1">Industrial sensor (simulated)</div>
-            <div class="mt-3">
-              <div class="text-xs text-gray-400">Status</div>
-              <div id="live-co2-status" class="font-medium">Loading...</div>
-            </div>
-          </div>
-
-          <div class="p-4 rounded-lg bg-white dark:bg-gray-900 border shadow-sm">
-            <div class="text-xs text-gray-400">Monthly Forecast</div>
-            <canvas id="dashboard-forecast" height="120"></canvas>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Section Divider -->
+    <div class="section-divider"></div>
 
     <!-- ==================== REAL-TIME CO2 MONITORING SECTION ==================== -->
-    <section id="real-time-monitor" class="pt-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <!-- Section Header -->
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
-              🌱 Live CO₂ Monitoring
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Real-time sensor data via MQTT
-            </p>
-          </div>
-          <!-- Connection Status -->
-          <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700">
-            <span id="status-indicator" class="status-indicator disconnected"></span>
-            <span id="status-text" class="text-sm font-medium text-gray-700 dark:text-gray-300">Connecting...</span>
-          </div>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <!-- Current CO2 Card -->
-          <div class="col-span-1 md:col-span-2 bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 border-2 border-green-200 dark:border-green-700">
-            <div class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Current CO₂ Level</div>
-            <div class="flex items-baseline gap-3">
-              <div id="co2-value" class="text-5xl font-bold text-green-600 dark:text-green-400">
-                --
+    <section id="real-time-monitor" class="pt-10">
+      <div class="section-container">
+        <div class="collapsible-section collapsed" data-section="real-time-monitor">
+          <div class="collapsible-header">
+            <div>
+              <h2>🌱 Live CO₂ Monitoring</h2>
+              <div class="subtitle">Real-time sensor data via MQTT</div>
+              <div class="preview">Real-time sensor data via MQTT</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                <span id="status-indicator" class="status-indicator disconnected"></span>
+                <span id="status-text" class="text-sm font-medium text-gray-700 dark:text-gray-300">Connecting...</span>
               </div>
-              <div class="text-2xl font-medium text-gray-500 dark:text-gray-400">ppm</div>
-            </div>
-            <div class="mt-3 flex items-center justify-between">
-              <div id="co2-quality" class="text-lg font-semibold">
-                🟡 Waiting for data...
-              </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400" id="last-update">
-                Never
-              </div>
+              <svg class="collapsible-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
             </div>
           </div>
-
-          <!-- Min Value Card -->
-          <div class="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-600">
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Today's Minimum</div>
-            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              <span id="min-value">--</span> <span class="text-sm font-normal">ppm</span>
-            </div>
-            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Lowest recorded</div>
-          </div>
-
-          <!-- Max Value Card -->
-          <div class="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-600">
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Today's Maximum</div>
-            <div class="text-2xl font-bold text-red-600 dark:text-red-400">
-              <span id="max-value">--</span> <span class="text-sm font-normal">ppm</span>
-            </div>
-            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Highest recorded</div>
-          </div>
-        </div>
-
-        <!-- Chart and Info Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Trend Chart -->
-          <div class="lg:col-span-2 bg-white dark:bg-gray-700 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-600">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">CO₂ Trend</h3>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Last 50 readings</div>
-            </div>
-            <div class="relative" style="height: 300px;">
-              <canvas id="co2-chart"></canvas>
-            </div>
-          </div>
-
-          <!-- Statistics and Sensor Info -->
-          <div class="space-y-4">
-            <!-- Average Card -->
-            <div class="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-600">
-              <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Session Average</div>
-              <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                <span id="avg-value">--</span> <span class="text-sm font-normal">ppm</span>
-              </div>
-              <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">Mean CO₂ level</div>
-            </div>
-
-            <!-- Sensor Info Card -->
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-              <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">Sensor Information</div>
-              <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-gray-600 dark:text-gray-300">Type:</span>
-                  <span id="sensor-type" class="font-medium text-gray-800 dark:text-gray-100">MH-Z19</span>
+          <div class="collapsible-content">
+            <div class="collapsible-inner">
+              <!-- Stats Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Current CO2 Card -->
+                <div class="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-100/50 dark:border-gray-700/50">
+                  <div class="text-[10px] font-light text-gray-400 dark:text-gray-500 mb-1 uppercase tracking-wide">Current CO₂ Level</div>
+                  <div class="flex items-baseline gap-3">
+                    <div id="co2-value" class="text-7xl font-black text-green-600 dark:text-green-400">
+                      --
+                    </div>
+                    <div class="text-lg font-light text-gray-400 dark:text-gray-500">ppm</div>
+                  </div>
+                  <div class="mt-4 flex items-center justify-between">
+                    <div id="co2-quality" class="text-base font-semibold text-gray-500">
+                      🟡 Waiting for data...
+                    </div>
+                    <div class="text-[10px] text-gray-400 font-light" id="last-update">
+                      Never
+                    </div>
+                  </div>
                 </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600 dark:text-gray-300">Status:</span>
-                  <span id="sensor-status" class="font-medium text-gray-800 dark:text-gray-100" id="co2-status">Initializing...</span>
+
+                <!-- Min Value Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                  <div class="text-[10px] font-light text-gray-400 dark:text-gray-500 mb-1">Today's Minimum</div>
+                  <div class="text-2xl font-black text-gray-800 dark:text-gray-100">
+                    <span id="min-value">--</span> <span class="text-xs font-light text-gray-400">ppm</span>
+                  </div>
+                  <div class="mt-2 text-[10px] text-gray-400 font-light">Lowest recorded</div>
                 </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600 dark:text-gray-300">Protocol:</span>
-                  <span class="font-medium text-gray-800 dark:text-gray-100">MQTT/WebSocket</span>
+
+                <!-- Max Value Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                  <div class="text-[10px] font-light text-gray-400 dark:text-gray-500 mb-1">Today's Maximum</div>
+                  <div class="text-2xl font-black text-gray-800 dark:text-gray-100">
+                    <span id="max-value">--</span> <span class="text-xs font-light text-gray-400">ppm</span>
+                  </div>
+                  <div class="mt-2 text-[10px] text-gray-400 font-light">Highest recorded</div>
                 </div>
               </div>
-            </div>
 
-            <!-- CO2 Level Guide -->
-            <div class="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-600">
-              <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">CO₂ Level Guide</div>
-              <div class="space-y-2 text-xs">
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                  <span class="text-gray-600 dark:text-gray-300">400-600: Excellent</span>
+              <!-- Chart and Info Grid -->
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Trend Chart -->
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-100/50 dark:border-gray-700/50">
+                  <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-[10px] font-light text-gray-400 uppercase tracking-wide">CO₂ Trend</h3>
+                    <div class="text-[10px] text-gray-400 font-light">Last 50 readings</div>
+                  </div>
+                  <div class="text-[10px] text-gray-500 dark:text-gray-400 italic mb-2">Connect sensor to view real-time CO₂ levels</div>
+                  <div class="relative" style="height: 300px;">
+                    <canvas id="co2-chart"></canvas>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-                  <span class="text-gray-600 dark:text-gray-300">600-1000: Good</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-                  <span class="text-gray-600 dark:text-gray-300">1000-1500: Moderate</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                  <span class="text-gray-600 dark:text-gray-300">1500+: Poor</span>
+
+                <!-- Statistics and Sensor Info -->
+                <div class="space-y-5">
+                  <!-- Average Card -->
+                  <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                    <div class="text-[10px] font-light text-gray-400 dark:text-gray-500 mb-1">Session Average</div>
+                    <div class="text-3xl font-black text-gray-800 dark:text-gray-100">
+                      <span id="avg-value">--</span> <span class="text-xs font-light text-gray-400">ppm</span>
+                    </div>
+                    <div class="mt-3 text-[10px] text-gray-400 font-light">Mean CO₂ level</div>
+                  </div>
+
+                  <!-- Sensor Info Card -->
+                  <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                    <div class="text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-4">Sensor Information</div>
+                    <div class="space-y-2 text-sm">
+                      <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-300">Type:</span>
+                        <span id="sensor-type" class="font-medium text-gray-800 dark:text-gray-100">MH-Z19</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-300">Status:</span>
+                        <span id="sensor-status" class="font-medium text-gray-800 dark:text-gray-100" id="co2-status">Initializing...</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-300">Protocol:</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">MQTT/WebSocket</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CO2 Level Guide -->
+                  <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100/50 dark:border-gray-700/50">
+                    <div class="text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-4">CO₂ Level Guide</div>
+                    <div class="space-y-3 text-xs">
+                      <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                        <span class="text-gray-600 dark:text-gray-300">400-600: Excellent</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                        <span class="text-gray-600 dark:text-gray-300">600-1000: Good</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-gray-500 dark:bg-gray-400"></span>
+                        <span class="text-gray-600 dark:text-gray-300">1000-1500: Moderate</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-gray-600 dark:bg-gray-300"></span>
+                        <span class="text-gray-600 dark:text-gray-300">1500+: Poor</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -441,175 +645,236 @@
         </div>
       </div>
     </section>
+
+    <!-- Section Divider -->
+    <div class="section-divider"></div>
+
     <!-- ==================== END REAL-TIME CO2 MONITORING ==================== -->
 
-    <section id="calculator" class="pt-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold">Personal Carbon Footprint</h2>
-          <div class="text-sm text-gray-500">Quick baseline + tips</div>
-        </div>
-
-        <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <form id="fp-form" class="col-span-2 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="block">
-                <div class="text-xs text-gray-500 mb-1">Car km per week: <span id="fp-car-kms-val" class="font-bold text-green-600">50</span> km</div>
-                <input id="fp-car-kms" type="range" min="0" max="1000" value="50" class="w-full"/>
-              </label>
-              <label class="block">
-                <div class="text-xs text-gray-500 mb-1">Flight hours per year: <span id="fp-flights-val" class="font-bold text-green-600">0</span> hrs</div>
-                <input id="fp-flights" type="range" min="0" max="200" value="0" class="w-full"/>
-              </label>
+    <section id="calculator" class="pt-10">
+      <div class="section-container">
+        <div class="collapsible-section" data-section="calculator">
+          <div class="collapsible-header">
+            <div>
+              <h2>Personal Carbon Footprint</h2>
+              <div class="subtitle">Quick baseline + tips</div>
+              <div class="preview">Calculate your carbon footprint with quick inputs</div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="block">
-                <div class="text-xs text-gray-500 mb-1">Monthly electricity bill: ₹<span id="fp-electricity-val" class="font-bold text-green-600">1500</span></div>
-                <input id="fp-electricity" type="range" min="0" max="20000" value="1500" step="100" class="w-full"/>
-              </label>
-              <label class="block">
-                <div class="text-xs text-gray-500 mb-1">Shopping / month: ₹<span id="fp-shopping-val" class="font-bold text-green-600">5000</span></div>
-                <input id="fp-shopping" type="range" min="0" max="100000" value="5000" step="500" class="w-full"/>
-              </label>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-              <label class="block"><div class="text-xs text-gray-500">Diet</div>
-                <select id="fp-diet" class="w-full p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border">
-                  <option value="meat-medium" selected>Medium Meat</option>
-                  <option value="meat-high">High Meat</option>
-                  <option value="meat-low">Low Meat</option>
-                  <option value="vegetarian">Vegetarian</option>
-                  <option value="vegan">Vegan</option>
-                </select>
-              </label>
-              <div class="text-right">
-                <button id="fp-calc" class="bg-green-600 text-white px-4 py-2 rounded-md">Calculate</button>
-              </div>
-            </div>
-            <div id="fp-tips" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></div>
-          </form>
-
-          <div class="col-span-1">
-            <div class="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
-              <div class="text-xs text-gray-400">Estimated Annual Footprint</div>
-              <div class="mt-2 text-4xl font-bold" id="fp-total">—</div>
-              <div class="mt-3">
-                <canvas id="fp-chart" height="200"></canvas>
-              </div>
-              <div class="mt-3 text-xs text-gray-500">Comparison: India Avg ~2 t CO₂e / yr</div>
-            </div>
+            <svg class="collapsible-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
           </div>
-        </div>
-      </div>
-    </section>
+          <div class="collapsible-content">
+            <div class="collapsible-inner">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <form id="fp-form" class="col-span-2 space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <label class="block">
+                    <div class="text-[10px] text-gray-400 font-light mb-1">Car km per week: <span id="fp-car-kms-val" class="font-bold text-gray-600 dark:text-gray-300">50</span> km</div>
+                    <input id="fp-car-kms" type="range" min="0" max="1000" value="50" class="w-full"/>
+                  </label>
+                  <label class="block">
+                    <div class="text-[10px] text-gray-400 font-light mb-1">Flight hours per year: <span id="fp-flights-val" class="font-bold text-gray-600 dark:text-gray-300">0</span> hrs</div>
+                    <input id="fp-flights" type="range" min="0" max="200" value="0" class="w-full"/>
+                  </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <label class="block">
+                      <div class="text-[10px] text-gray-400 font-light mb-1">Monthly electricity bill: ₹<span id="fp-electricity-val" class="font-bold text-gray-600 dark:text-gray-300">1500</span></div>
+                      <input id="fp-electricity" type="range" min="0" max="20000" value="1500" step="100" class="w-full"/>
+                    </label>
+                    <label class="block">
+                      <div class="text-[10px] text-gray-400 font-light mb-1">Shopping / month: ₹<span id="fp-shopping-val" class="font-bold text-gray-600 dark:text-gray-300">5000</span></div>
+                      <input id="fp-shopping" type="range" min="0" max="100000" value="5000" step="500" class="w-full"/>
+                    </label>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <label class="block"><div class="text-[10px] text-gray-400 font-light mb-1">Diet</div>
+                      <select id="fp-diet" class="w-full p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50">
+                        <option value="meat-medium" selected>Medium Meat</option>
+                        <option value="meat-high">High Meat</option>
+                        <option value="meat-low">Low Meat</option>
+                        <option value="vegetarian">Vegetarian</option>
+                        <option value="vegan">Vegan</option>
+                      </select>
+                    </label>
+                    <div class="text-right">
+                      <button id="fp-calc" class="bg-green-600 text-white px-4 py-2 rounded-md shadow-md">Calculate</button>
+                    </div>
+                  </div>
+                  <div id="fp-tips" class="mt-4 text-sm text-gray-600 dark:text-gray-300"></div>
+                </form>
 
-    <section id="travel" class="pt-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold">Travel Planner & Forecast</h2>
-          <div class="text-sm text-gray-500">Multi-leg planning · Monthly forecasting</div>
-        </div>
-        <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="col-span-2 p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label class="text-xs text-gray-500">Origin</label>
-                <select id="t-origin" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-800 border">
-                  <option>Jaipur</option><option>Delhi</option><option>Mumbai</option><option>Bengaluru</option><option>Udaipur</option>
-                </select>
+                <div class="col-span-1">
+                  <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100/50 dark:border-gray-700/50">
+                    <div class="text-[10px] text-gray-400 font-light uppercase tracking-wide">Estimated Annual Footprint</div>
+                    <div class="mt-1 text-6xl font-black" id="fp-total">—</div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 italic mt-2 mb-1">Enter lifestyle factors to see your breakdown</div>
+                    <div class="mt-4">
+                      <canvas id="fp-chart" height="200"></canvas>
+                    </div>
+                    <div class="mt-4 text-[10px] text-gray-400 font-light">Comparison: India Avg ~2 t CO₂e / yr</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label class="text-xs text-gray-500">Destination</label>
-                <select id="t-dest" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-800 border">
-                  <option>Mumbai</option><option>Jaipur</option><option>Delhi</option><option>Udaipur</option><option>Bengaluru</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">Mode</label>
-                <select id="t-mode" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-800 border">
-                  <option value="flight">Flight</option><option value="train">Train</option><option value="car">Car</option><option value="bus">Bus</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">Trips / month</label>
-                <input id="t-trips" type="number" min="1" value="1" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-800 border"/>
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">Round trip?</label>
-                <select id="t-round" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-800 border">
-                  <option value="round">Round trip</option><option value="oneway">One-way</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">Months forecast</label>
-                <input id="t-months" type="number" min="1" max="12" value="6" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-800 border"/>
-              </div>
-            </div>
-            <div class="mt-4 flex gap-3">
-              <button id="t-add" class="bg-green-600 text-white px-4 py-2 rounded-md">Add Leg</button>
-              <button id="t-clear" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-md">Clear</button>
-            </div>
-            <div class="mt-6">
-              <div class="overflow-x-auto">
-                <table class="min-w-full text-sm" id="t-table">
-                  <thead><tr class="text-left text-xs text-gray-500"><th>Leg</th><th>Mode</th><th>km</th><th>kg CO₂e / trip</th><th>Actions</th></tr></thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
-            <div class="text-xs text-gray-400">Plan Summary</div>
-            <div class="mt-2 text-2xl font-bold" id="t-total">0 kg</div>
-            <div class="mt-4">
-              <canvas id="t-chart" height="220"></canvas>
-            </div>
-            <div class="mt-4">
-              <h4 class="font-medium">Recommendations</h4>
-              <ul id="t-recs" class="list-disc pl-5 mt-2 text-sm"></ul>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="insights" class="pt-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <h2 class="text-xl font-semibold">Insights & Equivalents</h2>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
-            <div class="text-xs text-gray-400">Your forecast (6 months)</div>
-            <div id="ins-forecast" class="mt-2 font-bold text-2xl">0 kg</div>
-            <div class="text-xs text-gray-500 mt-1">Equivalent: <span id="ins-trees">0 trees</span> planted</div>
+    <!-- Section Divider -->
+    <div class="section-divider"></div>
+
+    <section id="travel" class="pt-10">
+      <div class="section-container">
+        <div class="collapsible-section collapsed" data-section="travel">
+          <div class="collapsible-header">
+            <div>
+              <h2>Travel Planner & Forecast</h2>
+              <div class="subtitle">Multi-leg planning · Monthly forecasting</div>
+              <div class="preview">Plan multi-leg trips and estimate emissions</div>
+            </div>
+            <svg class="collapsible-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
           </div>
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
-            <div class="text-xs text-gray-400">Top contributor</div>
-            <div id="ins-top" class="mt-2 font-bold text-xl">—</div>
-          </div>
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
-            <div class="text-xs text-gray-400">Actionable tip</div>
-            <div id="ins-tip" class="mt-2">—</div>
+          <div class="collapsible-content">
+            <div class="collapsible-inner">
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="col-span-2 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100/50 dark:border-gray-700/50 flex flex-col h-full">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-shrink-0">
+                    <div>
+                      <label class="text-[10px] text-gray-400 font-light">Origin</label>
+                      <select id="t-origin" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50">
+                        <option>Jaipur</option><option>Delhi</option><option>Mumbai</option><option>Bengaluru</option><option>Udaipur</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-gray-400 font-light">Destination</label>
+                      <select id="t-dest" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50">
+                        <option>Mumbai</option><option>Jaipur</option><option>Delhi</option><option>Udaipur</option><option>Bengaluru</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-gray-400 font-light">Mode</label>
+                      <select id="t-mode" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50">
+                        <option value="flight">Flight</option><option value="train">Train</option><option value="car">Car</option><option value="bus">Bus</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-gray-400 font-light">Trips / month</label>
+                      <input id="t-trips" type="number" min="1" value="1" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50"/>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-gray-400 font-light">Round trip?</label>
+                      <select id="t-round" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50">
+                        <option value="round">Round trip</option><option value="oneway">One-way</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-gray-400 font-light">Months forecast</label>
+                      <input id="t-months" type="number" min="1" max="12" value="6" class="w-full p-2 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50"/>
+                    </div>
+                  </div>
+                  <div class="mt-5 flex gap-3 flex-shrink-0">
+                    <button id="t-add" class="bg-green-600 text-white px-4 py-2 rounded-md shadow-md">Add Leg</button>
+                    <button id="t-clear" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-md shadow-md">Clear</button>
+                  </div>
+                  <div class="mt-6 flex-grow overflow-hidden">
+                    <div class="overflow-x-auto h-full">
+                      <table class="min-w-full text-sm" id="t-table">
+                        <thead><tr class="text-left text-[10px] text-gray-400 font-light"><th>Leg</th><th>Mode</th><th>km</th><th>kg CO₂e / trip</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100/50 dark:border-gray-700/50 flex flex-col h-full">
+                  <div class="text-[10px] text-gray-400 font-light uppercase tracking-wide">Plan Summary</div>
+                  <div class="mt-1 text-5xl font-black" id="t-total">0 kg</div>
+                  <div class="text-[10px] text-gray-500 dark:text-gray-400 italic mt-2 mb-1">Add legs to see monthly emission projections</div>
+                  <div class="mt-5 flex-grow flex flex-col justify-center">
+                    <canvas id="t-chart" height="220"></canvas>
+                  </div>
+                  <div class="mt-5 flex-shrink-0">
+                    <h4 class="font-medium text-sm text-gray-500 font-light">Recommendations</h4>
+                    <ul id="t-recs" class="list-disc pl-5 mt-2 text-xs text-gray-400 font-light"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="about" class="pt-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow">
-        <h2 class="text-xl font-semibold">About This Project</h2>
-        <p class="mt-2 text-sm text-gray-600">A Project-Based Learning demo that combines AQI tracking, a personal footprint calculator, a travel planner with forecasting, and recommendations. Built by the team at Manipal University Jaipur.</p>
+    <section id="insights" class="pt-10">
+      <div class="section-container">
+        <div class="collapsible-section collapsed" data-section="insights">
+          <div class="collapsible-header">
+            <div>
+              <h2>Insights & Equivalents</h2>
+              <div class="preview">Carbon footprint insights and environmental equivalents</div>
+            </div>
+            <svg class="collapsible-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="collapsible-content">
+            <div class="collapsible-inner">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50 flex flex-col h-full">
+                  <div class="text-[10px] text-gray-400 font-light uppercase tracking-wide">Your forecast (6 months)</div>
+                  <div id="ins-forecast" class="mt-1 font-black text-3xl">0 kg</div>
+                  <div class="text-[10px] text-gray-400 font-light mt-1">Equivalent: <span id="ins-trees">0 trees</span> planted</div>
+                </div>
+                <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50 flex flex-col h-full">
+                  <div class="text-[10px] text-gray-400 font-light uppercase tracking-wide">Top contributor</div>
+                  <div id="ins-top" class="mt-1 font-black text-2xl">—</div>
+                </div>
+                <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50 flex flex-col h-full">
+                  <div class="text-[10px] text-gray-400 font-light">Actionable tip</div>
+                  <div id="ins-tip" class="mt-1">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Divider -->
+    <div class="section-divider"></div>
+
+    <section id="about" class="pt-10">
+      <div class="collapsible-section collapsed" data-section="about">
+        <div class="collapsible-header">
+          <div>
+            <h2>About This Project</h2>
+            <div class="preview">Learn about the carbon neutrality initiative</div>
+          </div>
+          <svg class="collapsible-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <p class="text-sm text-gray-600">A Project-Based Learning demo that combines AQI tracking, a personal footprint calculator, a travel planner with forecasting, and recommendations. Built by the team at Manipal University Jaipur.</p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="text-center py-8 text-sm text-gray-500">
-    © 2025 Carbon Neutrality · Built by Divyam Narwal & team · <a href="#" class="text-green-600">GitHub</a>
+    © 2025 Carbon Neutrality · Built by Divyam Narwal & team · <a href="#" class="text-gray-600 hover:text-gray-700">GitHub</a>
   </footer>
 
   <!-- Loading overlay for AQI updates -->
   <div id="aqi-loading-overlay" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
     <div class="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
-      <div class="animate-spin rounded-full h-6 w-6 border-4 border-green-500 border-t-transparent"></div>
+      <div class="animate-spin rounded-full h-6 w-6 border-4 border-gray-500 border-t-transparent"></div>
       <span class="text-sm font-medium">Updating AQI data...</span>
     </div>
   </div>
@@ -736,6 +1001,6 @@ if (document.readyState === 'loading') {
   initializeMonitor();
 }
 </script>
-<script type="module" src="/app.js"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>

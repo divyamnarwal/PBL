@@ -42,6 +42,152 @@ document.querySelectorAll("a[href^='#']").forEach(anchor => {
   });
 });
 
+// ===== COLLAPSIBLE SECTIONS =====
+document.querySelectorAll(".collapsible-header").forEach(header => {
+  header.addEventListener("click", function() {
+    const section = this.closest(".collapsible-section");
+    if (!section) return;
+    
+    const content = section.querySelector(".collapsible-content");
+    if (!content) return;
+    
+    if (section.classList.contains("collapsed")) {
+      section.classList.remove("collapsed");
+      content.style.maxHeight = content.scrollHeight + "px";
+      setTimeout(() => {
+        content.style.maxHeight = "";
+      }, 300);
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+      requestAnimationFrame(() => {
+        section.classList.add("collapsed");
+        content.style.maxHeight = "";
+      });
+    }
+  });
+});
+
+// ===== EMPTY STATE DETECTION & AUTO-EXPANSION =====
+const SectionStateManager = {
+  sections: {
+    dashboard: document.querySelector('.collapsible-section[data-section="dashboard"]'),
+    calculator: document.querySelector('.collapsible-section[data-section="calculator"]'),
+    'real-time-monitor': document.querySelector('.collapsible-section[data-section="real-time-monitor"]'),
+    travel: document.querySelector('.collapsible-section[data-section="travel"]'),
+    insights: document.querySelector('.collapsible-section[data-section="insights"]'),
+    about: document.querySelector('.collapsible-section[data-section="about"]')
+  },
+
+  checkEmptyStates() {
+    this.checkTravelSection();
+    this.checkInsightsSection();
+    this.checkRealTimeMonitorSection();
+  },
+
+  checkTravelSection() {
+    const section = this.sections.travel;
+    if (!section || !section.classList.contains('collapsed')) return;
+
+    const tripCountEl = document.getElementById('quick-trip-count');
+    if (!tripCountEl) return;
+
+    const tripCount = tripCountEl.textContent.trim();
+    const hasData = tripCount !== '0 legs' && tripCount !== '';
+
+    if (hasData) {
+      this.expandSection('travel');
+    }
+  },
+
+  checkInsightsSection() {
+    const section = this.sections.insights;
+    if (!section || !section.classList.contains('collapsed')) return;
+
+    const forecastEl = document.getElementById('ins-forecast');
+    const topEl = document.getElementById('ins-top');
+
+    if (!forecastEl || !topEl) return;
+
+    const hasForecastData = forecastEl.textContent.trim() !== '—' && forecastEl.textContent.trim() !== '';
+    const hasTopData = topEl.textContent.trim() !== '—' && topEl.textContent.trim() !== '';
+
+    if (hasForecastData || hasTopData) {
+      this.expandSection('insights');
+    }
+  },
+
+  checkRealTimeMonitorSection() {
+    const section = this.sections['real-time-monitor'];
+    if (!section || !section.classList.contains('collapsed')) return;
+
+    const co2ValueEl = document.getElementById('co2-value');
+    const statusTextEl = document.getElementById('status-text');
+    const sensorStatusEl = document.getElementById('sensor-status');
+
+    if (!co2ValueEl || !statusTextEl) return;
+
+    const co2Value = co2ValueEl.textContent.trim();
+    const statusText = statusTextEl.textContent.trim();
+    const sensorStatus = sensorStatusEl ? sensorStatusEl.textContent.trim() : '';
+
+    const hasValidData = 
+      co2Value !== '0' && 
+      co2Value !== '' &&
+      !statusText.includes('Connecting') &&
+      !statusText.includes('Waiting') &&
+      !statusText.includes('Initializing') &&
+      sensorStatus !== 'Initializing...';
+
+    if (hasValidData) {
+      this.expandSection('real-time-monitor');
+    }
+  },
+
+  expandSection(sectionKey) {
+    const section = this.sections[sectionKey];
+    if (!section || !section.classList.contains('collapsed')) return;
+    
+    const content = section.querySelector('.collapsible-content');
+    if (!content) {
+      section.classList.remove('collapsed');
+      console.log(`📂 Auto-expanded section: ${sectionKey}`);
+      return;
+    }
+    
+    content.style.maxHeight = content.scrollHeight + "px";
+    section.classList.remove('collapsed');
+    setTimeout(() => {
+      content.style.maxHeight = "";
+    }, 300);
+    
+    console.log(`📂 Auto-expanded section: ${sectionKey}`);
+  },
+
+  startMonitoring() {
+    this.checkEmptyStates();
+    
+    setInterval(() => {
+      this.checkEmptyStates();
+    }, 3000);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.SectionStateManager = SectionStateManager;
+  
+  document.querySelectorAll('.collapsible-section:not(.collapsed)').forEach(section => {
+    const content = section.querySelector('.collapsible-content');
+    if (content) {
+      content.style.maxHeight = content.scrollHeight + "px";
+      setTimeout(() => {
+        content.style.maxHeight = "";
+      }, 300);
+    }
+  });
+  
+  SectionStateManager.startMonitoring();
+});
+
 // ===== AQI DASHBOARD (Legacy API) =====
 const WAQI_TOKEN = "c1ebca30b3f4338ff326ce803a2174bbfe4d66c4"; // Replace with your token from https://aqicn.org/api/
 
@@ -49,10 +195,12 @@ const aqiCityInput = document.getElementById("aqi-city-input");
 const aqiSearchBtn = document.getElementById("aqi-search");
 const aqiValueEl = document.getElementById("aqi-value-container");
 const aqiCityEl = document.getElementById("aqi-city");
+const aqiStatusEl = document.getElementById("aqi-status");
 const aqiTimestampEl = document.getElementById("aqi-timestamp");
 const aqiDominantEl = document.getElementById("aqi-dominant");
 const aqiLoadingOverlay = document.getElementById("aqi-loading-overlay");
 const pollutantDetailsEl = document.getElementById("pollutant-details");
+const pollutantBreakdownEl = document.getElementById("pollutant-breakdown");
 const showPollutantsBtn = document.getElementById("show-pollutants");
 
 const pollutantLabel = {
@@ -202,40 +350,60 @@ function normalizeCityKey(city) {
 function styleAQI(aqi) {
   if (!isFinite(aqi)) {
     aqiValueEl.textContent = "-";
-    aqiValueEl.style.backgroundColor = "#6b7280";
+    aqiValueEl.style.background = "linear-gradient(to bottom right, #6b7280, #4b5563)";
     aqiValueEl.style.color = "#ffffff";
+    aqiStatusEl.textContent = "Unknown";
     return;
   }
 
   aqiValueEl.textContent = Math.round(aqi);
   aqiValueEl.style.color = "#ffffff";
 
-  if (aqi <= 50) aqiValueEl.style.backgroundColor = "#22c55e";
-  else if (aqi <= 100) {
-    aqiValueEl.style.backgroundColor = "#eab308";
+  let status, gradient;
+  if (aqi <= 50) {
+    status = "Good";
+    gradient = "linear-gradient(to bottom right, #22c55e, #16a34a)";
+  } else if (aqi <= 100) {
+    status = "Moderate";
+    gradient = "linear-gradient(to bottom right, #eab308, #ca8a04)";
     aqiValueEl.style.color = "#111827";
-  } else if (aqi <= 150) aqiValueEl.style.backgroundColor = "#f97316";
-  else if (aqi <= 200) aqiValueEl.style.backgroundColor = "#ef4444";
-  else if (aqi <= 300) aqiValueEl.style.backgroundColor = "#a855f7";
-  else aqiValueEl.style.backgroundColor = "#7f1d1d";
+  } else if (aqi <= 150) {
+    status = "Unhealthy for Sensitive Groups";
+    gradient = "linear-gradient(to bottom right, #f97316, #ea580c)";
+  } else if (aqi <= 200) {
+    status = "Unhealthy";
+    gradient = "linear-gradient(to bottom right, #ef4444, #dc2626)";
+  } else if (aqi <= 300) {
+    status = "Very Unhealthy";
+    gradient = "linear-gradient(to bottom right, #a855f7, #9333ea)";
+  } else {
+    status = "Hazardous";
+    gradient = "linear-gradient(to bottom right, #7f1d1d, #991b1b)";
+  }
+
+  aqiValueEl.style.background = gradient;
+  aqiStatusEl.textContent = status;
 }
 
 function renderPollutants(pollutants) {
-  pollutantDetailsEl.innerHTML = "";
   pollutantDetailsEl.classList.add("hidden");
-  showPollutantsBtn.textContent = "Details";
+  showPollutantsBtn.textContent = "View Details";
 
-  if (!pollutants) return;
+  if (!pollutants || !pollutantBreakdownEl) return;
   const entries = Object.entries(pollutants).filter(([, value]) => value !== null && isFinite(value));
   if (!entries.length) return;
 
-  let html = '<div class="grid grid-cols-2 gap-2 text-xs">';
+  let html = "";
   entries.forEach(([key, value]) => {
     const label = pollutantLabel[key] || key;
-    html += `<div><strong>${label}:</strong> ${Number(value).toFixed(1)}</div>`;
+    html += `
+      <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-300">${label}</span>
+        <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">${Number(value).toFixed(1)}</span>
+      </div>
+    `;
   });
-  html += "</div>";
-  pollutantDetailsEl.innerHTML = html;
+  pollutantBreakdownEl.innerHTML = html;
 }
 
 async function fetchFromLegacyAPI(city) {
@@ -349,7 +517,7 @@ aqiCityInput?.addEventListener("keypress", event => {
 showPollutantsBtn?.addEventListener("click", () => {
   if (!latestAQIData) return;
   pollutantDetailsEl.classList.toggle("hidden");
-  showPollutantsBtn.textContent = pollutantDetailsEl.classList.contains("hidden") ? "Details" : "Hide Details";
+  showPollutantsBtn.textContent = pollutantDetailsEl.classList.contains("hidden") ? "View Details" : "Hide Details";
 });
 
 fetchAQI("Jaipur");
@@ -398,6 +566,19 @@ function createDashboardForecastChart() {
 
   const labels = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const values = labels.map(() => Math.random() * 250 + 100);
+  const currentMonth = new Date().getMonth();
+  const currentMonthLabel = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][currentMonth];
+
+  const gradient = dashboardForecastCtx.getContext("2d").createLinearGradient(0, 0, 0, 160);
+  gradient.addColorStop(0, "rgba(16, 185, 129, 0.3)");
+  gradient.addColorStop(1, "rgba(16, 185, 129, 0)");
+
+  const pointColors = labels.map(label => 
+    label === currentMonthLabel ? "#10b981" : "transparent"
+  );
+  const pointRadii = labels.map(label => 
+    label === currentMonthLabel ? 6 : 3
+  );
 
   dashboardForecastChart = new Chart(dashboardForecastCtx, {
     type: "line",
@@ -406,21 +587,58 @@ function createDashboardForecastChart() {
       datasets: [{
         data: values,
         borderColor: "#10b981",
-        backgroundColor: "rgba(16, 185, 129, 0.12)",
-        borderWidth: 2,
+        backgroundColor: gradient,
+        borderWidth: 3,
         tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 5
+        fill: true,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius: pointRadii,
+        pointHoverRadius: 8,
+        pointBorderWidth: 3,
+        pointHoverBackgroundColor: "#10b981",
+        pointHoverBorderColor: "#ffffff"
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       aspectRatio: 2,
-      plugins: { legend: { display: false } },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          padding: 12,
+          titleFont: { size: 13 },
+          bodyFont: { size: 12 },
+          cornerRadius: 8,
+          displayColors: false
+        }
+      },
       scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 } } }
+        x: { 
+          grid: { display: false },
+          ticks: { 
+            font: { size: 11, weight: 500 },
+            color: "#6b7280"
+          } 
+        },
+        y: { 
+          beginAtZero: true, 
+          grid: { 
+            color: "rgba(107, 114, 128, 0.1)",
+            drawBorder: false
+          },
+          ticks: { 
+            font: { size: 11 },
+            color: "#6b7280",
+            padding: 10
+          } 
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: "index"
       }
     }
   });
@@ -1082,6 +1300,8 @@ function renderTravelChart(monthlyData = []) {
  * @param {Object} stats - Plan statistics
  */
 function updateInsights(stats) {
+  const hasMeaningfulData = stats.totalEmission > 0 || stats.topContributor;
+  
   if (insightsForecastEl) {
     insightsForecastEl.textContent = stats.totalEmission > 0
       ? `${stats.totalEmission.toFixed(0)} kg`
@@ -1115,6 +1335,10 @@ function updateInsights(stats) {
       insightsTipEl.textContent = "Great job! Keep monitoring and balancing travel plans.";
       insightsTipEl.classList.remove("text-gray-400");
     }
+  }
+
+  if (hasMeaningfulData && SectionStateManager.sections.insights) {
+    SectionStateManager.expandSection('insights');
   }
 }
 
@@ -1204,6 +1428,10 @@ function updateQuickStats() {
   if (quickTripCountEl) {
     const count = travelLegs.length;
     quickTripCountEl.textContent = count === 0 ? "0 legs" : `${count} leg${count !== 1 ? 's' : ''}`;
+    
+    if (count > 0 && SectionStateManager.sections.travel) {
+      SectionStateManager.expandSection('travel');
+    }
   }
 }
 
