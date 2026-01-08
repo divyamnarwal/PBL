@@ -2,8 +2,9 @@
 // Real-Time CO2 Monitoring Dashboard Logic
 
 class RealTimeMonitor {
-  constructor(mqttService) {
-    this.mqttService = mqttService;
+  constructor(chartCanvasId, topic) {
+    this.chartCanvasId = chartCanvasId;
+    this.topic = topic;
     this.chart = null;
     this.dataBuffer = [];
     this.maxBufferSize = 100; // Keep last 100 readings
@@ -30,27 +31,16 @@ class RealTimeMonitor {
   /**
    * Initialize the monitor
    */
-  async init() {
+  init() {
     console.log('🚀 Initializing Real-Time CO2 Monitor...');
 
     // Get DOM elements
     this.initElements();
 
-    // Register MQTT handlers
-    this.mqttService.onMessage((data) => this.handleData(data));
-    this.mqttService.onStatus((status, message) => this.handleStatus(status, message));
-
     // Initialize Chart
     this.initChart();
 
-    // Connect to MQTT broker
-    try {
-      await this.mqttService.connect();
-      console.log('✅ Monitor initialized and connected');
-    } catch (error) {
-      console.error('❌ Failed to connect to MQTT:', error);
-      this.showError('Failed to connect to sensor. Check if MQTT broker is running.');
-    }
+    console.log('✅ Monitor initialized');
   }
 
   /**
@@ -63,19 +53,19 @@ class RealTimeMonitor {
       co2Quality: document.getElementById('co2-quality'),
       co2Status: document.getElementById('co2-status'),
       lastUpdate: document.getElementById('last-update'),
-      
+
       // Statistics
       minValue: document.getElementById('min-value'),
       maxValue: document.getElementById('max-value'),
       avgValue: document.getElementById('avg-value'),
-      
+
       // Connection status
       statusIndicator: document.getElementById('status-indicator'),
       statusText: document.getElementById('status-text'),
-      
+
       // Chart
-      chartCanvas: document.getElementById('co2-chart'),
-      
+      chartCanvas: document.getElementById(this.chartCanvasId),
+
       // Sensor info
       sensorType: document.getElementById('sensor-type'),
       sensorStatus: document.getElementById('sensor-status')
@@ -195,28 +185,28 @@ class RealTimeMonitor {
   /**
    * Handle connection status changes
    */
-  handleStatus(status, message) {
+  updateStatus(status, message) {
     console.log('📡 Status update:', status, message);
 
     if (!this.elements.statusIndicator || !this.elements.statusText) return;
 
     // Update status indicator
     this.elements.statusIndicator.className = 'status-indicator';
-    
+
     switch (status) {
       case 'connected':
         this.elements.statusIndicator.classList.add('connected');
-        this.elements.statusText.textContent = 'Connected';
+        this.elements.statusText.textContent = message || 'Connected';
         break;
       case 'connecting':
       case 'reconnecting':
         this.elements.statusIndicator.classList.add('connecting');
-        this.elements.statusText.textContent = 'Connecting...';
+        this.elements.statusText.textContent = message || 'Connecting...';
         break;
       case 'disconnected':
       case 'error':
         this.elements.statusIndicator.classList.add('disconnected');
-        this.elements.statusText.textContent = 'Disconnected';
+        this.elements.statusText.textContent = message || 'Disconnected';
         break;
     }
   }
@@ -366,7 +356,7 @@ class RealTimeMonitor {
    */
   destroy() {
     console.log('🧹 Cleaning up monitor...');
-    
+
     if (this.chart) {
       this.chart.destroy();
       this.chart = null;
@@ -379,10 +369,6 @@ class RealTimeMonitor {
       avg: 0,
       count: 0
     };
-
-    if (this.mqttService) {
-      this.mqttService.disconnect();
-    }
   }
 }
 

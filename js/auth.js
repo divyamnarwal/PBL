@@ -77,6 +77,15 @@ if (loginForm) {
 
 // AUTH STATE LISTENER
 onAuthStateChanged(auth, (user) => {
+  // TEMPORARY BYPASS FOR TESTING - Remove this in production!
+  if (onProtectedPage) {
+    console.log("⚠️ Authentication bypassed for testing");
+    showProtectedApp();
+    return;
+  }
+
+  // Original authentication logic (commented out for testing)
+  /*
   if (user) {
     if (currentPath.includes("login.html")) {
       window.location.href = "dashboard.html";
@@ -91,6 +100,7 @@ onAuthStateChanged(auth, (user) => {
       window.location.href = "login.html";
     }
   }
+  */
 });
 
 // LOGOUT FUNCTION
