@@ -1,6 +1,6 @@
 // js/firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { config } from './config.js';
 
 // Initialize Firebase with configuration from config.js

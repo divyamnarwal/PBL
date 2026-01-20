@@ -84,7 +84,7 @@
   <!-- Firebase + Auth Logic -->
   <script type="module">
     import { auth } from "../js/firebase.js";
-    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { createUserWithEmailAndPassword } from "firebase/auth";
 
     const signupForm = document.getElementById("signup-form");
     const errorMsg = document.getElementById("signup-error");

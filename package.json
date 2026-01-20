@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "serve": "vite preview --port 3000"
+    "serve": "vite preview --port 3000",
+    "bridge": "node scripts/mqtt-mongodb-bridge.js"
   },
   "keywords": [
     "carbon",
@@ -24,6 +25,10 @@
   },
   "dependencies": {
     "chart.js": "^4.4.0",
+    "dotenv": "^17.2.3",
+    "firebase": "^12.8.0",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.1.5",
     "mqtt": "^5.3.0"
   }
 }
