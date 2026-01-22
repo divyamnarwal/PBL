@@ -294,12 +294,31 @@ await co2StorageService.getByAirQuality('location-name');
 }
 ```
 
+## Carbon Reduction Recommendation Engine
+
+A rule-based system that analyzes building emissions against expected baselines and generates actionable carbon reduction recommendations. Compares real-time sensor data with predefined emission profiles to identify sources of excessive energy consumption.
+
+**Key Features:**
+- Multi-tenant emission profiles (org-specific and global defaults)
+- Severity classification (LOW, MEDIUM, HIGH) based on deviation thresholds
+- Health scoring (0-100) for overall building emission performance
+- Duplicate prevention for recommendation storage
+- Priority-sorted actionable recommendations
+
+**API Endpoints:**
+- `POST /api/recommendations/generate` - Generate recommendations for a building
+- `GET /api/recommendations/active` - Fetch unresolved recommendations
+- `PATCH /api/recommendations/:id/resolve` - Mark recommendation as resolved
+
+**Documentation:** [Recommendation Engine](docs/recommendation-engine.md)
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) - System architecture and data flow
 - [Quick Start](docs/QUICKSTART.md) - Detailed setup guide
 - [Environment Setup](docs/ENVIRONMENT.md) - Development environment
 - [Integration Plan](docs/INTEGRATION_PLAN.md) - Implementation roadmap
+- [Recommendation Engine](docs/recommendation-engine.md) - Carbon reduction system details
 
 ## Troubleshooting
 

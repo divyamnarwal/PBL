@@ -2,6 +2,9 @@
 import { auth } from "./firebase.js";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
+// Development-only logging flag
+const DEBUG = import.meta.env.DEV;
+
 const loginForm = document.getElementById("login-form");
 const loginPage = document.getElementById("login-page");
 const mainApp = document.getElementById("main-app");
@@ -46,33 +49,27 @@ if (loginForm) {
     e.preventDefault();
     if (isRedirecting) return;
 
-    console.log("Form submitted");
+    if (DEBUG) console.log("Form submitted");
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
 
-    console.log("Attempting login with:", email);
+    if (DEBUG) console.log("Attempting login with:", email);
     errorMsg.classList.add("hidden"); // Hide previous errors
 
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        console.log("Login successful:", userCredential.user.email);
+        if (DEBUG) console.log("Login successful:", userCredential.user.email);
         // Auth state listener will handle redirect - no need to redirect here
       })
       .catch((error) => {
-        console.error("Login error:", error);
-        console.error("Error code:", error.code);
+        if (DEBUG) console.error("Login error:", error.code);
 
-        let errorMessage = "Invalid email or password!";
-        if (error.code === "auth/user-not-found") {
-          errorMessage = "No account found with this email.";
-        } else if (error.code === "auth/wrong-password") {
-          errorMessage = "Incorrect password.";
-        } else if (error.code === "auth/invalid-email") {
-          errorMessage = "Invalid email format.";
-        } else if (error.code === "auth/too-many-requests") {
+        // Generic error message - prevents user enumeration
+        let errorMessage = "Invalid email or password.";
+
+        // Only exception for rate limiting (Firebase-side protection)
+        if (error.code === "auth/too-many-requests") {
           errorMessage = "Too many attempts. Please try again later.";
-        } else if (error.code === "auth/invalid-credential") {
-          errorMessage = "Invalid email or password.";
         }
 
         errorMsg.textContent = errorMessage;
@@ -91,15 +88,14 @@ onAuthStateChanged(auth, (user) => {
   const isLoginPage = currentUrl.includes("login.html");
   const isDashboardPage = currentUrl.includes("dashboard.html");
 
-  console.log("Auth state changed:", { user: !!user, currentUrl, isLoginPage, isDashboardPage });
+  if (DEBUG) console.log("Auth state changed:", { user: !!user, currentUrl, isLoginPage, isDashboardPage });
 
   if (user) {
     // User is signed in
-    console.log("✅ User authenticated:", user.email);
+    if (DEBUG) console.log("✅ User authenticated:", user.email);
 
     // If on login page, redirect to dashboard immediately (no timeout)
     if (isLoginPage) {
-      console.log("Redirecting authenticated user from login to dashboard");
       isRedirecting = true;
       window.location.replace("dashboard.html"); // Use replace for faster navigation
       return;
@@ -111,11 +107,10 @@ onAuthStateChanged(auth, (user) => {
     }
   } else {
     // User is signed out
-    console.log("❌ User not authenticated");
+    if (DEBUG) console.log("❌ User not authenticated");
 
     // If on dashboard page, redirect to login
     if (isDashboardPage) {
-      console.log("Redirecting unauthenticated user to login");
       hideProtectedApp("Redirecting to login...");
       isRedirecting = true;
       setTimeout(() => {

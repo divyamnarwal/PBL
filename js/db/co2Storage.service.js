@@ -271,6 +271,57 @@ class CO2StorageService {
     // Note: We don't close MongoDB connection here as it may be used by other services
     console.log('🔌 CO2 Storage Service closed');
   }
+
+  /**
+   * Get aggregated emissions by source for a building
+   *
+   * PRODUCTION TODO: Replace with actual energy consumption tracking by emission source
+   *
+   * @param {string} buildingId - Building identifier
+   * @returns {Promise<Array>} Aggregated emissions by source
+   */
+  async getAggregatedEmissions(buildingId) {
+    // Guard: Only allow demo buildings in mock mode
+    const demoBuildings = ['office-demo-001', 'campus-demo-001'];
+
+    if (!demoBuildings.includes(buildingId)) {
+      throw new Error(
+        `No emission data available for building '${buildingId}'. ` +
+        `getAggregatedEmissions() only supports demo buildings. ` +
+        `For production, implement actual energy consumption tracking by emission source.`
+      );
+    }
+
+    return this.getAggregatedEmissionsForDemo(buildingId);
+  }
+
+  /**
+   * DEMO VERSION: Returns mock data to demonstrate recommendation engine
+   *
+   * Scoped explicitly to demo use. Returns hardcoded values that exceed
+   * baselines to trigger HIGH_USAGE recommendations for demonstration.
+   *
+   * @private
+   * @param {string} buildingId - Demo building identifier
+   * @returns {Promise<Array>} Mock aggregated emissions
+   */
+  async getAggregatedEmissionsForDemo(buildingId) {
+    const demoData = {
+      'office-demo-001': [
+        { emissionSource: 'HVAC', actualPercentage: 55 },  // Exceeds ~40% baseline
+        { emissionSource: 'LIGHTING', actualPercentage: 28 }, // Exceeds ~20% baseline
+        { emissionSource: 'ELECTRICITY', actualPercentage: 15 },
+        { emissionSource: 'EQUIPMENT', actualPercentage: 35 }  // Exceeds ~25% baseline
+      ],
+      'campus-demo-001': [
+        { emissionSource: 'HVAC', actualPercentage: 50 },
+        { emissionSource: 'TRANSPORT', actualPercentage: 45 },
+        { emissionSource: 'LIGHTING', actualPercentage: 22 }
+      ]
+    };
+
+    return demoData[buildingId] || [];
+  }
 }
 
 // Export singleton instance
