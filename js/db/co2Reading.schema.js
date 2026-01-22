@@ -62,15 +62,16 @@ const co2ReadingSchema = new mongoose.Schema({
   }
 }, {
   // Automatically manage createdAt/updatedAt fields
-  timestamps: true,
-
-  // Create indexes for common queries
-  indexes: [
-    { timestamp: -1 }, // Sort by latest
-    { location: 1, timestamp: -1 }, // Location-based queries
-    { airQuality: 1 }, // Filter by air quality
-  ]
+  timestamps: true
 });
+
+// ============================================
+// INDEXES (Must be defined outside schema options)
+// ============================================
+
+co2ReadingSchema.index({ timestamp: -1 }); // Sort by latest
+co2ReadingSchema.index({ location: 1, timestamp: -1 }); // Location-based queries
+co2ReadingSchema.index({ airQuality: 1 }); // Filter by air quality
 
 /**
  * Instance method to calculate air quality based on CO2 level
@@ -87,9 +88,8 @@ co2ReadingSchema.methods.calculateAirQuality = function() {
 /**
  * Pre-save hook to automatically calculate air quality
  */
-co2ReadingSchema.pre('save', function(next) {
+co2ReadingSchema.pre('save', function() {
   this.airQuality = this.calculateAirQuality();
-  next();
 });
 
 /**

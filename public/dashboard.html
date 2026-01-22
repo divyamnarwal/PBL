@@ -385,6 +385,7 @@
           <a href="#calculator" class="nav-link">Footprint</a>
           <a href="#travel" class="nav-link">Travel Planner</a>
           <a href="#insights" class="nav-link">Insights</a>
+          <a href="recommendations.html" class="nav-link">Recommendations</a>
           <a href="#about" class="nav-link">About</a>
         </nav>
 
@@ -412,6 +413,7 @@
           <div class="mt-6 flex gap-3">
             <a href="#calculator" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700">Calculate Footprint</a>
             <a href="#travel" class="bg-white dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50 px-4 py-2 rounded-lg shadow-md hover:bg-gray-50 transition-all">Plan a Trip</a>
+            <a href="recommendations.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 font-medium">🎯 Recommendations</a>
           </div>
           <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100/50 dark:border-gray-700/50"><div class="text-xs text-gray-400">Avg India / yr</div><div class="font-bold">~2 t CO₂e</div></div>
@@ -881,12 +883,12 @@
 
   </div>
 
-<script type="module" src="../js/auth.js"></script>
+<script type="module" src="/js/auth.js"></script>
 <script type="module">
 // Real-Time CO2 Monitor with MQTT Integration
-import { MQTTService } from '../js/mqtt-service.js';
-import { RealTimeMonitor } from '../js/real-time-monitor.js';
-import { config } from '../js/config.js';
+import { MQTTService } from '/js/mqtt-service.js';
+import { RealTimeMonitor } from '/js/real-time-monitor.js';
+import { config } from '/js/config.js';
 
 // Configuration from environment variables
 const MQTT_CONFIG = {

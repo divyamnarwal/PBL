@@ -1,9 +1,11 @@
 // js/config.js
 // Environment configuration loader
 // For production, these should be loaded from environment variables during build
-// For development, you can override them here or use a build tool like Vite
+// For development, Vite loads VITE_* variables from .env file
 
-// Default Firebase configuration (fallback)
+const isVite = typeof import.meta !== 'undefined' && import.meta.env;
+
+// Default Firebase configuration (fallback for development)
 const defaultFirebaseConfig = {
   apiKey: "AIzaSyAaDgzwbFpZc23ben2SOWEvR-mI55TFldw",
   authDomain: "carbon-neutrality-bea37.firebaseapp.com",
@@ -14,19 +16,10 @@ const defaultFirebaseConfig = {
   measurementId: "G-H02K92BYZH"
 };
 
-// Default MQTT configuration
-const defaultMqttConfig = {
-  brokerUrl: "ws://localhost:9001",
-  topic: "sensor/co2"
-};
-
-// Check if running in Vite environment
-const isVite = typeof import.meta !== 'undefined' && import.meta.env;
-
-// Helper function to get env value or fallback
+// Helper to get env value or fallback
 const getEnvOrFallback = (envValue, fallback) => {
   if (!envValue) return fallback;
-  // Check if it's a placeholder value (contains "your_" or common placeholders)
+  // Check if it's a placeholder value
   if (typeof envValue === 'string' && (
     envValue.includes('your_') ||
     envValue === 'your_project_id' ||
@@ -37,53 +30,29 @@ const getEnvOrFallback = (envValue, fallback) => {
   return envValue;
 };
 
-// Get configuration from environment or use defaults
-const envApiKey = isVite ? import.meta.env.VITE_FIREBASE_API_KEY : undefined;
-const envAuthDomain = isVite ? import.meta.env.VITE_FIREBASE_AUTH_DOMAIN : undefined;
-const envProjectId = isVite ? import.meta.env.VITE_FIREBASE_PROJECT_ID : undefined;
-const envStorageBucket = isVite ? import.meta.env.VITE_FIREBASE_STORAGE_BUCKET : undefined;
-const envMessagingSenderId = isVite ? import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID : undefined;
-const envAppId = isVite ? import.meta.env.VITE_FIREBASE_APP_ID : undefined;
-const envMeasurementId = isVite ? import.meta.env.VITE_FIREBASE_MEASUREMENT_ID : undefined;
-const envMqttBrokerUrl = isVite ? import.meta.env.VITE_MQTT_BROKER_URL : undefined;
-const envMqttTopic = isVite ? import.meta.env.VITE_MQTT_TOPIC : undefined;
-
-export const config = {
+// Firebase config from environment variables with fallback
+const config = {
   firebase: {
-    apiKey: getEnvOrFallback(envApiKey, defaultFirebaseConfig.apiKey),
-    authDomain: getEnvOrFallback(envAuthDomain, defaultFirebaseConfig.authDomain),
-    projectId: getEnvOrFallback(envProjectId, defaultFirebaseConfig.projectId),
-    storageBucket: getEnvOrFallback(envStorageBucket, defaultFirebaseConfig.storageBucket),
-    messagingSenderId: getEnvOrFallback(envMessagingSenderId, defaultFirebaseConfig.messagingSenderId),
-    appId: getEnvOrFallback(envAppId, defaultFirebaseConfig.appId),
-    measurementId: getEnvOrFallback(envMeasurementId, defaultFirebaseConfig.measurementId)
+    apiKey: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_API_KEY : undefined, defaultFirebaseConfig.apiKey),
+    authDomain: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_AUTH_DOMAIN : undefined, defaultFirebaseConfig.authDomain),
+    projectId: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_PROJECT_ID : undefined, defaultFirebaseConfig.projectId),
+    storageBucket: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_STORAGE_BUCKET : undefined, defaultFirebaseConfig.storageBucket),
+    messagingSenderId: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID : undefined, defaultFirebaseConfig.messagingSenderId),
+    appId: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_APP_ID : undefined, defaultFirebaseConfig.appId),
+    measurementId: getEnvOrFallback(isVite ? import.meta.env.VITE_FIREBASE_MEASUREMENT_ID : undefined, defaultFirebaseConfig.measurementId)
   },
   mqtt: {
-    brokerUrl: getEnvOrFallback(envMqttBrokerUrl, defaultMqttConfig.brokerUrl),
-    topic: getEnvOrFallback(envMqttTopic, defaultMqttConfig.topic)
+    brokerUrl: getEnvOrFallback(isVite ? import.meta.env.VITE_MQTT_BROKER_URL : undefined, 'ws://localhost:9001'),
+    topic: getEnvOrFallback(isVite ? import.meta.env.VITE_MQTT_TOPIC : undefined, 'sensor/co2')
   }
 };
 
-// Validate required configuration
-const requiredFirebaseKeys = ['apiKey', 'authDomain', 'projectId', 'appId'];
-const missingKeys = requiredFirebaseKeys.filter(key => !config.firebase[key]);
-
-if (missingKeys.length > 0) {
-  console.error('❌ Missing required Firebase configuration:', missingKeys);
-  console.error('Please check your .env file or environment variables');
-}
-
 // Log configuration status (without exposing secrets)
-console.log('✅ Configuration loaded:', {
-  firebase: {
-    projectId: config.firebase.projectId,
-    authDomain: config.firebase.authDomain,
-    hasApiKey: !!config.firebase.apiKey,
-    hasAppId: !!config.firebase.appId
-  },
-  mqtt: {
-    brokerUrl: config.mqtt.brokerUrl,
-    topic: config.mqtt.topic
-  },
-  environment: isVite ? 'Vite (with .env support)' : 'Browser (fallback values)'
+console.log('✅ Firebase Config Loaded:', {
+  projectId: config.firebase.projectId,
+  authDomain: config.firebase.authDomain,
+  hasApiKey: !!config.firebase.apiKey,
+  hasAppId: !!config.firebase.appId
 });
+
+export { config };

@@ -110,6 +110,20 @@ Welcome! This guide will help you navigate all the documentation for integrating
 
 ---
 
+### 6. RECOMMENDATION_ENGINE.md (Carbon Reduction System)
+**Purpose:** Technical documentation for the recommendation engine
+**Use When:** Understanding or extending the recommendation system
+
+**Contains:**
+- Architecture flow diagrams
+- Core component specifications (Emission Profiles, Rule Engine, API, Storage)
+- Severity matrix table
+- Design rationale (rule-based vs ML)
+
+**Best For:** Understanding carbon reduction analysis and recommendations
+
+---
+
 ## 🗺️ Implementation Roadmap
 
 ```
