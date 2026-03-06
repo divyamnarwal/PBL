@@ -32,7 +32,7 @@
 
     <form id="signup-form" class="space-y-5">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label for="signup-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Email Address
         </label>
         <input
@@ -45,7 +45,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label for="signup-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Password
         </label>
         <input
@@ -57,6 +57,19 @@
           placeholder="••••••••"
         />
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be at least 6 characters</p>
+      </div>
+
+      <div>
+        <label for="signup-confirm-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Confirm Password
+        </label>
+        <input
+          type="password"
+          id="signup-confirm-password"
+          required
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+          placeholder="••••••••"
+        />
       </div>
 
       <button
@@ -81,7 +94,6 @@
     </div>
   </section>
 
-  <!-- Firebase + Auth Logic -->
   <script type="module">
     import { auth } from "/js/firebase.js";
     import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -92,20 +104,23 @@
 
     signupForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      console.log("Signup form submitted");
-      
+
       const email = document.getElementById("signup-email").value;
       const password = document.getElementById("signup-password").value;
-
-      console.log("Creating account for:", email);
+      const confirmPassword = document.getElementById("signup-confirm-password").value;
 
       // Hide previous messages
       errorMsg.classList.add("hidden");
       successMsg.classList.add("hidden");
 
+      if (password !== confirmPassword) {
+        errorMsg.textContent = "Passwords do not match. Please try again.";
+        errorMsg.classList.remove("hidden");
+        return;
+      }
+
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          console.log("Account created successfully:", userCredential.user);
           successMsg.textContent = "Account created! Redirecting to dashboard...";
           successMsg.classList.remove("hidden");
 
@@ -115,9 +130,6 @@
           }, 1500);
         })
         .catch((error) => {
-          console.error("Signup error:", error);
-          console.error("Error code:", error.code);
-          
           let errorMessage = "Failed to create account.";
           if (error.code === "auth/email-already-in-use") {
             errorMessage = "This email is already registered. Please login.";
@@ -126,7 +138,7 @@
           } else if (error.code === "auth/weak-password") {
             errorMessage = "Password is too weak. Use at least 6 characters.";
           }
-          
+
           errorMsg.textContent = errorMessage;
           errorMsg.classList.remove("hidden");
         });
