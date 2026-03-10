@@ -2,10 +2,13 @@
 # Raspberry Pi + MH‑Z19B/E over UART (/dev/serial0)
 # Output format: {"co2": 612, "status": "OK"}
 
+import os
 import time, json, mh_z19  # pip install mh_z19
 
-# Select the UART device; /dev/serial0 follows the active UART on Raspberry Pi
-SERIAL_DEV = "/dev/ttyAMA0"  # Using ttyAMA0 directly (serial0 is a symlink to this)
+# Select the UART device; /dev/serial0 follows the active UART on any Raspberry Pi model.
+# On Pi 3/4/5, /dev/ttyAMA0 is used by Bluetooth by default.
+# Override with SERIAL_DEV env var if needed.
+SERIAL_DEV = os.environ.get("SERIAL_DEV", "/dev/serial0")
 
 # Set the serial device before reading
 mh_z19.set_serialdevice(SERIAL_DEV)

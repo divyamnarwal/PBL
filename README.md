@@ -12,6 +12,7 @@ A comprehensive real-time CO2 monitoring system with a modern web dashboard. Tra
 - **Carbon Calculator**: Calculate and offset your carbon footprint
 - **Interactive Charts**: Visualize CO2 trends with Chart.js
 - **MQTT Integration**: WebSocket-based real-time data streaming
+- **Separate Prediction Service**: Embedded Streamlit forecasting dashboard backed by `/api/ml/co2-history`
 - **Responsive Design**: Works on desktop and mobile devices
 - **Dark/Light Theme**: Toggle between visual themes
 
@@ -26,6 +27,7 @@ A comprehensive real-time CO2 monitoring system with a modern web dashboard. Tra
 | Real-time Communication | MQTT over WebSockets |
 | Charts | Chart.js 4.x |
 | Backend (Bridge) | Node.js with MQTT.js |
+| Prediction Service | Streamlit + Plotly + TensorFlow |
 | Backend (Sensor) | Python with paho-mqtt |
 | MQTT Broker | Mosquitto |
 
@@ -136,6 +138,33 @@ carbon-neutrality/
 6. **Open in browser**
    Navigate to `http://localhost:5173`
 
+### Optional Prediction Service
+
+To add the separate forecasting dashboard from `ml-dashboard/`:
+
+1. **Start the Node API**
+   ```bash
+   npm run server
+   ```
+
+2. **Install Python dependencies**
+   ```bash
+   pip install -r ml-dashboard/requirements.txt
+   ```
+
+3. **Start the Streamlit dashboard**
+   ```bash
+   ./scripts/start_prediction_dashboard.sh
+   ```
+
+   On Windows PowerShell:
+   ```powershell
+   .\scripts\start_prediction_dashboard.ps1
+   ```
+
+4. **Open the predictions page**
+   Navigate to `/predictions` from the main dashboard.
+
 ## Available Scripts
 
 | Command | Description |
@@ -143,7 +172,24 @@ carbon-neutrality/
 | `npm run dev` | Start Vite dev server (port 5173) |
 | `npm run build` | Build for production |
 | `npm run serve` | Serve production build on port 3000 |
+| `npm run server` | Start the Express API server on port 5000 |
 | `npm run bridge` | Start MQTT-MongoDB bridge service |
+
+## Prediction Service
+
+The prediction UI is served from `public/predictions.html` and linked from the main dashboard as `/predictions`.
+
+**Key files:**
+- `api/ml.routes.js` - CO2 history endpoint for the Streamlit app
+- `ml-dashboard/app.py` - Streamlit forecasting service
+- `scripts/start_prediction_dashboard.sh` / `scripts/start_prediction_dashboard.ps1` - startup scripts
+
+**Environment variables:**
+- `VITE_PREDICTION_DASHBOARD_URL` - iframe target for the frontend page
+- `CARBON_API_BASE_URL` - backend history endpoint consumed by Streamlit
+- `STREAMLIT_SERVER_PORT` - local Streamlit port
+- `MODEL_PATH` - optional `.keras` model file
+- `ML_MODE` - defaults to `demo`
 
 ## MQTT-MongoDB Bridge
 

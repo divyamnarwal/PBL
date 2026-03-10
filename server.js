@@ -7,6 +7,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import recommendationsRoutes from './api/recommendations.routes.js';
+import mlRoutes from './api/ml.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,13 +30,26 @@ app.use(express.urlencoded({ extended: true }));
 console.log('Loading recommendations routes...');
 app.use('/api/recommendations', recommendationsRoutes);
 console.log('Recommendations routes mounted at /api/recommendations');
+app.use('/api/ml', mlRoutes);
 
 // Serve static files from /public (Vite dev or built files)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Fallback for SPA routes (serves recommendations.html for /recommendations)
+// Fallback for SPA routes
 app.get('/recommendations', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'recommendations.html'));
+});
+app.get('/predictions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'predictions.html'));
+});
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // Health check

@@ -108,7 +108,7 @@ const SectionStateManager = {
 
     if (!forecastEl || !topEl) return;
 
-    const hasForecastData = forecastEl.textContent.trim() !== '—' && forecastEl.textContent.trim() !== '';
+    const hasForecastData = forecastEl.textContent.trim() !== '—' && forecastEl.textContent.trim() !== '' && forecastEl.textContent.trim() !== '0 kg';
     const hasTopData = topEl.textContent.trim() !== '—' && topEl.textContent.trim() !== '';
 
     if (hasForecastData || hasTopData) {
@@ -133,6 +133,7 @@ const SectionStateManager = {
     const hasValidData = 
       co2Value !== '0' && 
       co2Value !== '' &&
+      co2Value !== '--' &&
       !statusText.includes('Connecting') &&
       !statusText.includes('Waiting') &&
       !statusText.includes('Initializing') &&
@@ -689,6 +690,13 @@ function initializeFootprintCalculator() {
     calculateFootprint();
   });
 
+  // Button click handler
+  fpCalcBtn?.addEventListener("click", event => {
+    event.preventDefault();
+    updateRangeLabels();
+    calculateFootprint();
+  });
+
   // Initialize labels and calculate initial footprint
   updateRangeLabels();
   calculateFootprint();
@@ -715,8 +723,8 @@ function calculateFootprint() {
 
   const carEmission = (car * 52 * 0.12) / 1000;
   const flightEmission = flights * 0.09;
-  const electricityEmission = (electricity * 12 * 0.82) / 1000;
-  const shoppingEmission = (shopping * 12 * 0.5) / 1000;
+  const electricityEmission = (electricity / 7 * 12 * 0.82) / 1000; // ₹→kWh (avg ₹7/kWh) then grid factor
+  const shoppingEmission = (shopping * 12 * 0.006) / 1000; // ~0.006 kg CO₂e per ₹ spent
 
   const dietEmissionMap = {
     "meat-high": 3.3,
@@ -775,13 +783,7 @@ function calculateFootprint() {
   }
 }
 
-fpCalcBtn?.addEventListener("click", event => {
-  event.preventDefault();
-  updateRangeLabels();
-  calculateFootprint();
-});
-
-calculateFootprint();
+// NOTE: fpCalcBtn click handler is attached inside initializeFootprintCalculator()
 
 // ===== TRAVEL PLANNER =====
 // ============================================================================

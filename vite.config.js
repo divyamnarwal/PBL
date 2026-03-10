@@ -16,6 +16,8 @@ export default defineConfig({
         signup: resolve(__dirname, 'public/signup.html'),
         dashboard: resolve(__dirname, 'public/dashboard.html'),
         recommendations: resolve(__dirname, 'public/recommendations.html'),
+        predictions: resolve(__dirname, 'public/predictions.html'),
+        predictionsRoute: resolve(__dirname, 'public/predictions/index.html'),
       }
     }
   },

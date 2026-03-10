@@ -94,3 +94,23 @@ The dashboard will auto-connect to `raspberrypi.local:9001`
 - Add more sensors or data points
 - Set up alerts for high CO₂ levels
 
+
+## Optional Prediction Service
+
+Run the separate Streamlit forecasting dashboard alongside the existing app:
+
+```bash
+pip install -r ml-dashboard/requirements.txt
+npm run server
+./scripts/start_prediction_dashboard.sh
+```
+
+On Windows PowerShell:
+
+```powershell
+pip install -r ml-dashboard/requirements.txt
+npm run server
+.\scripts\start_prediction_dashboard.ps1
+```
+
+Then open `/predictions` from the main dashboard. The Streamlit service reads CO2 history from `http://localhost:5000/api/ml/co2-history` and falls back to demo data when the Node API or MongoDB data is unavailable.

@@ -1,7 +1,7 @@
 // scripts/simulate-sensor.js
 // Simulates MQTT CO2 sensor data for testing
 
-const mqtt = require('mqtt');
+import mqtt from 'mqtt';
 
 // Configuration
 const BROKER_URL = 'mqtt://localhost:1883';

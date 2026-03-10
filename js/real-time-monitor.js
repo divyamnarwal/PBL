@@ -51,7 +51,7 @@ class RealTimeMonitor {
       // Current reading
       co2Value: document.getElementById('co2-value'),
       co2Quality: document.getElementById('co2-quality'),
-      co2Status: document.getElementById('co2-status'),
+      co2Status: document.getElementById('sensor-status'),
       lastUpdate: document.getElementById('last-update'),
 
       // Statistics
@@ -68,7 +68,11 @@ class RealTimeMonitor {
 
       // Sensor info
       sensorType: document.getElementById('sensor-type'),
-      sensorStatus: document.getElementById('sensor-status')
+      sensorStatus: document.getElementById('sensor-status'),
+
+      // Quick Snapshot (hero section)
+      quickCo2Value: document.getElementById('quick-co2-value'),
+      quickCo2Status: document.getElementById('quick-co2-status')
     };
 
     console.log('📋 DOM elements initialized:', Object.keys(this.elements).length, 'elements');
@@ -244,6 +248,15 @@ class RealTimeMonitor {
     }
     if (this.elements.sensorStatus) {
       this.elements.sensorStatus.textContent = data.status === 'OK' ? '✓ Active' : data.status;
+    }
+
+    // Update Quick Snapshot (hero section)
+    if (this.elements.quickCo2Value) {
+      this.elements.quickCo2Value.textContent = `${data.co2} ppm`;
+    }
+    if (this.elements.quickCo2Status) {
+      const quality = this.getQualityLevel(data.co2);
+      this.elements.quickCo2Status.textContent = `${quality.emoji} ${quality.label}`;
     }
 
     // Auto-expand section when data arrives

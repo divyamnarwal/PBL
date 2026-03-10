@@ -2,26 +2,33 @@
 # Raspberry Pi + MH‑Z19B/E over UART with MQTT publishing
 # Publishes CO2 readings to MQTT topic: sensor/co2
 
+import os
 import time
 import json
 import mh_z19
 import paho.mqtt.client as mqtt
-from datetime import datetime
+from datetime import datetime, timezone
 
-# MQTT Configuration
-MQTT_BROKER = "localhost"  # MQTT broker on same Raspberry Pi
-MQTT_PORT = 1883
-MQTT_TOPIC = "sensor/co2"
+# MQTT Configuration — override via environment variables for remote brokers
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
+MQTT_TOPIC = os.environ.get("MQTT_TOPIC", "sensor/co2")
 MQTT_CLIENT_ID = "co2_sensor_publisher"
 
 # Serial device configuration
-SERIAL_DEV = "/dev/ttyAMA0"
+# /dev/serial0 is the recommended symlink — it follows the active UART on any Pi model.
+# On Pi 3/4/5, /dev/ttyAMA0 is Bluetooth by default; enable UART and disable BT
+# in /boot/config.txt if you need /dev/ttyAMA0 for the sensor.
+SERIAL_DEV = os.environ.get("SERIAL_DEV", "/dev/serial0")
 
 # Set the serial device before reading
 mh_z19.set_serialdevice(SERIAL_DEV)
 
-# Initialize MQTT client
-mqtt_client = mqtt.Client(client_id=MQTT_CLIENT_ID)
+# Initialize MQTT client (compatible with paho-mqtt v1 and v2)
+try:
+    mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID)
+except (AttributeError, TypeError):
+    mqtt_client = mqtt.Client(client_id=MQTT_CLIENT_ID)
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
@@ -38,11 +45,15 @@ def read_co2():
         return {"co2": None, "status": f"ERROR: {e.__class__.__name__}"}
 
 def publish_to_mqtt(reading):
-    """Publish sensor reading to MQTT topic"""
+    """Publish sensor reading to MQTT topic. Skips null/warmup readings."""
+    if reading["co2"] is None:
+        print(f"Skipping publish (no valid CO2 reading): {reading['status']}", flush=True)
+        return
+
     payload = {
         "co2": reading["co2"],
         "status": reading["status"],
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "sensor": "MH-Z19"
     }
     message = json.dumps(payload)

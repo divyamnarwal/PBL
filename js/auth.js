@@ -13,7 +13,7 @@ const logoutBtn = document.getElementById("logout-btn");
 const authStatus = document.getElementById("auth-status");
 const authStatusMessage = document.getElementById("auth-status-message");
 const currentPath = window.location.pathname.toLowerCase();
-const onProtectedPage = currentPath.includes("dashboard.html");
+const onProtectedPage = isProtectedPath(currentPath);
 
 // Prevent multiple redirects
 let isRedirecting = false;
@@ -86,9 +86,9 @@ onAuthStateChanged(auth, (user) => {
   // Get current path dynamically (not from captured variable)
   const currentUrl = window.location.pathname.toLowerCase();
   const isLoginPage = currentUrl.includes("login.html");
-  const isDashboardPage = currentUrl.includes("dashboard.html");
+  const isProtectedPage = isProtectedPath(currentUrl);
 
-  if (DEBUG) console.log("Auth state changed:", { user: !!user, currentUrl, isLoginPage, isDashboardPage });
+  if (DEBUG) console.log("Auth state changed:", { user: !!user, currentUrl, isLoginPage, isProtectedPage });
 
   if (user) {
     // User is signed in
@@ -102,7 +102,7 @@ onAuthStateChanged(auth, (user) => {
     }
 
     // Show protected app content
-    if (isDashboardPage) {
+    if (isProtectedPage) {
       showProtectedApp();
     }
   } else {
@@ -110,7 +110,7 @@ onAuthStateChanged(auth, (user) => {
     if (DEBUG) console.log("❌ User not authenticated");
 
     // If on dashboard page, redirect to login
-    if (isDashboardPage) {
+    if (isProtectedPage) {
       hideProtectedApp("Redirecting to login...");
       isRedirecting = true;
       setTimeout(() => {
@@ -128,4 +128,8 @@ if (logoutBtn) {
       window.location.replace("login.html");
     });
   });
+}
+
+function isProtectedPath(pathname) {
+  return /\/(dashboard|predictions)(?:\/|\.html)?$/i.test(pathname);
 }

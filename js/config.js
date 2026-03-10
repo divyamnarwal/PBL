@@ -44,6 +44,12 @@ const config = {
   mqtt: {
     brokerUrl: getEnvOrFallback(isVite ? import.meta.env.VITE_MQTT_BROKER_URL : undefined, 'ws://localhost:9001'),
     topic: getEnvOrFallback(isVite ? import.meta.env.VITE_MQTT_TOPIC : undefined, 'sensor/co2')
+  },
+  predictions: {
+    dashboardUrl: getEnvOrFallback(
+      isVite ? import.meta.env.VITE_PREDICTION_DASHBOARD_URL : undefined,
+      'http://localhost:8501'
+    )
   }
 };
 
