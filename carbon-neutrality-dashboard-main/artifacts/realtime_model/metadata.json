@@ -1,0 +1,1 @@
+{"window_size": 30, "feature_columns": ["co2_level", "temperature", "humidity"], "training_steps": 5355}

@@ -1,0 +1,13 @@
+torch
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+plotly
+streamlit
+pymongo
+dnspython
+python-dotenv
+fastapi
+uvicorn
