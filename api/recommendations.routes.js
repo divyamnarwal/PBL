@@ -10,6 +10,7 @@ import { analyzeEmissions } from '../js/db/emissionRuleEngine.service.js';
 import Recommendation from '../js/db/recommendation.schema.js';
 import co2StorageService from '../js/db/co2Storage.service.js';
 import mongoDBService from '../js/db/mongodb.service.js';
+import { ensureDefaultEmissionProfiles, inferBuildingTypeFromId } from '../js/db/recommendationDefaults.js';
 
 const router = express.Router();
 
@@ -68,7 +69,8 @@ const asyncHandler = (fn) => (req, res, next) => {
  * Generate carbon reduction recommendations for a building
  */
 router.post('/generate', validateBuildingId, validateBuildingType, asyncHandler(async (req, res) => {
-  const { buildingId, buildingType, organizationId } = req.body;
+  const { buildingId, organizationId } = req.body;
+  const buildingType = req.body.buildingType || inferBuildingTypeFromId(buildingId);
 
   // Required field validation
   if (!buildingId || !buildingType) {
@@ -80,6 +82,7 @@ router.post('/generate', validateBuildingId, validateBuildingType, asyncHandler(
 
   // Ensure MongoDB connection
   await mongoDBService.connect();
+  await ensureDefaultEmissionProfiles();
 
   // Fetch aggregated emission data for the building
   // Returns: [{ emissionSource, actualPercentage }, ...]
@@ -166,6 +169,20 @@ router.post('/generate', validateBuildingId, validateBuildingType, asyncHandler(
 }));
 
 /**
+ * GET /api/recommendations/targets
+ * Return demo buildings plus live sensor locations that can generate recommendations.
+ */
+router.get('/targets', asyncHandler(async (req, res) => {
+  await mongoDBService.connect();
+  const targets = await co2StorageService.getRecommendationTargets();
+
+  return res.json({
+    success: true,
+    targets
+  });
+}));
+
+/**
  * GET /api/recommendations/active
  * Fetch active (unresolved, non-dismissed) recommendations
  */
@@ -190,6 +207,7 @@ router.get('/active', validateBuildingId, asyncHandler(async (req, res) => {
 
   // Ensure MongoDB connection
   await mongoDBService.connect();
+  await ensureDefaultEmissionProfiles();
 
   let recommendations;
 
@@ -264,6 +282,13 @@ router.use((error, req, res, next) => {
     });
   }
 
+  if (error.message?.includes('No emission data found') || error.message?.includes('Connect a sensor')) {
+    return res.status(404).json({
+      success: false,
+      error: error.message
+    });
+  }
+
   // Default error
   res.status(500).json({
     success: false,
@@ -299,9 +324,9 @@ function generateRecommendationText(insight) {
   const baseAction = actions[emissionSource] || 'Review and optimize energy usage patterns.';
 
   const severityPrefix = {
-    LOW: 'Consider ',
-    MEDIUM: 'Prioritize ',
-    HIGH: 'Urgently '
+    LOW: 'Consider',
+    MEDIUM: 'Prioritize',
+    HIGH: 'Urgently'
   };
 
   return `${severityPrefix[severity]}: ${baseAction} Current usage exceeds baseline by ${deviation.toFixed(1)}%.`;
@@ -323,7 +348,11 @@ function calculateExpectedReduction(insight) {
   };
 
   const factor = reductionFactors[severity] || 0.5;
-  return Math.min(100, Math.round(excessDeviation * factor));
+  if (excessDeviation <= 0) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(1, Math.round(excessDeviation * factor)));
 }
 
 /**

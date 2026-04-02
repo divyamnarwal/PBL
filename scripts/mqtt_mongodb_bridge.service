@@ -1,0 +1,22 @@
+[Unit]
+Description=MQTT to MongoDB Atlas Bridge
+After=network.target mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+Type=simple
+User=raspberrypi
+WorkingDirectory=/home/raspberrypi
+ExecStart=/usr/bin/python3 /home/raspberrypi/mqtt_mongodb_bridge.py
+Restart=always
+RestartSec=5
+Environment=MQTT_BROKER=localhost
+Environment=MQTT_PORT=1883
+Environment=MQTT_TOPIC=sensor/co2
+Environment=LOCATION=lab-1
+Environment=MONGODB_DB=test
+Environment=MONGODB_COLLECTION=co2readings
+Environment=MONGODB_URI=mongodb+srv://divyanshdobhal64:XZ7KZB5fvqpX3pCz@cluster0.3gv27n2.mongodb.net/
+
+[Install]
+WantedBy=multi-user.target

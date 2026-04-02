@@ -47,7 +47,7 @@ function RecommendationsList({ buildingId }) {
   }
 
   if (error) {
-    return <p style={{ color: '#ef4444' }}>Unable to load recommendations.</p>;
+    return <p style={{ color: '#ef4444' }}>Unable to load recommendations: {error}</p>;
   }
 
   if (recommendations.length === 0) {

@@ -202,22 +202,62 @@ recommendationSchema.methods.isStale = function() {
  * Get active (unresolved) recommendations for a building
  */
 recommendationSchema.statics.getActiveByBuilding = function(buildingId) {
-  return this.find({
-    buildingId,
-    isResolved: false,
-    dismissedAt: null
-  }).sort({ severity: -1, createdAt: -1 });
+  return this.aggregate([
+    {
+      $match: {
+        buildingId,
+        isResolved: false,
+        dismissedAt: null
+      }
+    },
+    {
+      $addFields: {
+        severityRank: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$severity', 'HIGH'] }, then: 3 },
+              { case: { $eq: ['$severity', 'MEDIUM'] }, then: 2 },
+              { case: { $eq: ['$severity', 'LOW'] }, then: 1 }
+            ],
+            default: 0
+          }
+        }
+      }
+    },
+    { $sort: { severityRank: -1, createdAt: -1 } },
+    { $project: { severityRank: 0 } }
+  ]);
 };
 
 /**
  * Get active recommendations for an organization
  */
 recommendationSchema.statics.getActiveByOrganization = function(organizationId) {
-  return this.find({
-    organizationId,
-    isResolved: false,
-    dismissedAt: null
-  }).sort({ severity: -1, createdAt: -1 });
+  return this.aggregate([
+    {
+      $match: {
+        organizationId,
+        isResolved: false,
+        dismissedAt: null
+      }
+    },
+    {
+      $addFields: {
+        severityRank: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$severity', 'HIGH'] }, then: 3 },
+              { case: { $eq: ['$severity', 'MEDIUM'] }, then: 2 },
+              { case: { $eq: ['$severity', 'LOW'] }, then: 1 }
+            ],
+            default: 0
+          }
+        }
+      }
+    },
+    { $sort: { severityRank: -1, createdAt: -1 } },
+    { $project: { severityRank: 0 } }
+  ]);
 };
 
 /**

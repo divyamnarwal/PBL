@@ -1,0 +1,19 @@
+[Unit]
+Description=MH-Z19 MQTT Publisher
+After=network.target mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+Type=simple
+User=raspberrypi
+WorkingDirectory=/home/raspberrypi
+ExecStart=/usr/bin/python3 /home/raspberrypi/air_quality_mhz19_mqtt.py
+Restart=always
+RestartSec=5
+Environment=SERIAL_DEV=/dev/serial0
+Environment=MQTT_BROKER=localhost
+Environment=MQTT_PORT=1883
+Environment=MQTT_TOPIC=sensor/co2
+
+[Install]
+WantedBy=multi-user.target

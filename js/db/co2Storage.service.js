@@ -3,6 +3,7 @@
 
 import CO2Reading from './co2Reading.schema.js';
 import mongoDBService from './mongodb.service.js';
+import { inferBuildingTypeFromId } from './recommendationDefaults.js';
 
 /**
  * CO2 Storage Service
@@ -281,18 +282,13 @@ class CO2StorageService {
    * @returns {Promise<Array>} Aggregated emissions by source
    */
   async getAggregatedEmissions(buildingId) {
-    // Guard: Only allow demo buildings in mock mode
     const demoBuildings = ['office-demo-001', 'campus-demo-001'];
 
-    if (!demoBuildings.includes(buildingId)) {
-      throw new Error(
-        `No emission data available for building '${buildingId}'. ` +
-        `getAggregatedEmissions() only supports demo buildings. ` +
-        `For production, implement actual energy consumption tracking by emission source.`
-      );
+    if (demoBuildings.includes(buildingId)) {
+      return this.getAggregatedEmissionsForDemo(buildingId);
     }
 
-    return this.getAggregatedEmissionsForDemo(buildingId);
+    return this.getAggregatedEmissionsFromLiveData(buildingId);
   }
 
   /**
@@ -321,6 +317,142 @@ class CO2StorageService {
     };
 
     return demoData[buildingId] || [];
+  }
+
+  /**
+   * Build a recommendation-friendly proxy breakdown from recent live CO2 telemetry.
+   * This is a heuristic fallback until source-specific metering is available.
+   */
+  async getAggregatedEmissionsFromLiveData(buildingId) {
+    await this.init();
+
+    const readings = await this.getRecent(24, buildingId, 288);
+    if (!readings.length) {
+      throw new Error(
+        `No emission data found for '${buildingId}'. ` +
+        `Connect a sensor for this location or seed demo data first.`
+      );
+    }
+
+    const normalized = [...readings]
+      .filter((reading) => Number.isFinite(reading.co2))
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    if (!normalized.length) {
+      throw new Error(`Recent sensor data for '${buildingId}' is invalid or incomplete.`);
+    }
+
+    const buildingType = inferBuildingTypeFromId(buildingId);
+    const avgCo2 = normalized.reduce((sum, reading) => sum + reading.co2, 0) / normalized.length;
+    const peakCo2 = normalized.reduce((max, reading) => Math.max(max, reading.co2), 0);
+    const minCo2 = normalized.reduce((min, reading) => Math.min(min, reading.co2), normalized[0].co2);
+    const avgTemperature = normalized.reduce((sum, reading) => sum + (Number.isFinite(reading.temperature) ? reading.temperature : 22), 0) / normalized.length;
+    const span = Math.max(1, peakCo2 - minCo2);
+
+    let eveningCount = 0;
+    let commuteSpikeCount = 0;
+    let occupancyWeighted = 0;
+
+    for (const reading of normalized) {
+      const timestamp = new Date(reading.timestamp);
+      const hour = timestamp.getHours();
+
+      if (hour >= 18 || hour < 6) {
+        eveningCount += 1;
+      }
+
+      if ((hour >= 7 && hour <= 10) || (hour >= 17 && hour <= 20)) {
+        if (reading.co2 >= avgCo2) {
+          commuteSpikeCount += 1;
+        }
+      }
+
+      occupancyWeighted += Math.max(0, reading.co2 - 420);
+    }
+
+    const eveningRatio = eveningCount / normalized.length;
+    const commuteRatio = commuteSpikeCount / normalized.length;
+    const occupancyIntensity = Math.min(1, occupancyWeighted / (normalized.length * 900));
+    const coolingPressure = Math.min(1, Math.max(0, avgTemperature - 21) / 12);
+    const peakPressure = Math.min(1, span / 1200);
+    const staleAirPressure = Math.min(1, Math.max(0, avgCo2 - 600) / 1200);
+
+    const sourceWeights = this.getSourceWeightTemplate(buildingType);
+    sourceWeights.HVAC = (sourceWeights.HVAC || 0) + (coolingPressure * 0.24) + (staleAirPressure * 0.18);
+    sourceWeights.ELECTRICITY = (sourceWeights.ELECTRICITY || 0) + (peakPressure * 0.18) + (occupancyIntensity * 0.08);
+    sourceWeights.LIGHTING = (sourceWeights.LIGHTING || 0) + (eveningRatio * 0.18);
+    sourceWeights.EQUIPMENT = (sourceWeights.EQUIPMENT || 0) + (occupancyIntensity * 0.18);
+
+    if (sourceWeights.TRANSPORT != null) {
+      sourceWeights.TRANSPORT += (commuteRatio * 0.24) + (peakPressure * 0.08);
+    }
+
+    if (sourceWeights.FUEL != null) {
+      sourceWeights.FUEL += peakPressure * 0.16;
+    }
+
+    return this.normalizeSourceWeights(sourceWeights);
+  }
+
+  getSourceWeightTemplate(buildingType) {
+    const templates = {
+      OFFICE: { HVAC: 0.42, LIGHTING: 0.18, ELECTRICITY: 0.24, EQUIPMENT: 0.16 },
+      CAMPUS: { ELECTRICITY: 0.30, EQUIPMENT: 0.24, TRANSPORT: 0.22, LIGHTING: 0.12, HVAC: 0.12 },
+      INDUSTRIAL: { FUEL: 0.34, EQUIPMENT: 0.30, ELECTRICITY: 0.22, HVAC: 0.14 },
+      COMMERCIAL: { HVAC: 0.30, LIGHTING: 0.24, ELECTRICITY: 0.22, EQUIPMENT: 0.16, TRANSPORT: 0.08 }
+    };
+
+    return { ...(templates[buildingType] || templates.OFFICE) };
+  }
+
+  normalizeSourceWeights(weights) {
+    const total = Object.values(weights).reduce((sum, value) => sum + value, 0);
+    if (!total) {
+      return [];
+    }
+
+    return Object.entries(weights)
+      .map(([emissionSource, weight]) => ({
+        emissionSource,
+        actualPercentage: Number(((weight / total) * 100).toFixed(2))
+      }))
+      .sort((a, b) => b.actualPercentage - a.actualPercentage);
+  }
+
+  async getRecommendationTargets() {
+    await this.init();
+
+    const locations = await CO2Reading.aggregate([
+      {
+        $group: {
+          _id: '$location',
+          latestTimestamp: { $max: '$timestamp' },
+          count: { $sum: 1 },
+          avgCO2: { $avg: '$co2' }
+        }
+      },
+      { $sort: { latestTimestamp: -1 } },
+      { $limit: 20 }
+    ]);
+
+    const liveTargets = locations
+      .filter((item) => item._id)
+      .map((item) => ({
+        buildingId: item._id,
+        buildingType: inferBuildingTypeFromId(item._id),
+        label: `${item._id} (${Math.round(item.avgCO2)} ppm avg)`,
+        source: 'live',
+        latestTimestamp: item.latestTimestamp,
+        readingCount: item.count
+      }));
+
+    const demoTargets = [
+      { buildingId: 'office-demo-001', buildingType: 'OFFICE', label: 'Office Demo 001', source: 'demo' },
+      { buildingId: 'campus-demo-001', buildingType: 'CAMPUS', label: 'Campus Demo 001', source: 'demo' }
+    ];
+
+    const seen = new Set(liveTargets.map((target) => target.buildingId));
+    return [...liveTargets, ...demoTargets.filter((target) => !seen.has(target.buildingId))];
   }
 }
 

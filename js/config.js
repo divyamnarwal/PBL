@@ -34,8 +34,10 @@ const config = {
     brokerUrl: (isVite && import.meta.env.VITE_MQTT_BROKER_URL) || 'ws://localhost:9001',
     topic: (isVite && import.meta.env.VITE_MQTT_TOPIC) || 'sensor/co2'
   },
+  apiBaseUrl: (isVite && import.meta.env.VITE_API_BASE_URL) || 'http://localhost:5000/api',
   predictions: {
-    dashboardUrl: (isVite && import.meta.env.VITE_PREDICTION_DASHBOARD_URL) || 'http://localhost:8501'
+    dashboardUrl: (isVite && import.meta.env.VITE_PREDICTION_DASHBOARD_URL) || 'http://localhost:8501',
+    apiUrl: (isVite && import.meta.env.VITE_PREDICTION_API_URL) || 'http://127.0.0.1:8010/predictions/latest'
   }
 };
 

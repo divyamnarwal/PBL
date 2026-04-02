@@ -1,0 +1,15 @@
+[Unit]
+Description=MH-Z19 HTTP Sensor API
+After=network.target
+
+[Service]
+Type=simple
+User=raspberrypi
+WorkingDirectory=/home/raspberrypi
+ExecStart=/usr/bin/python3 /home/raspberrypi/air_quality_mhz19_http.py
+Restart=always
+RestartSec=5
+Environment=SERIAL_DEV=/dev/serial0
+
+[Install]
+WantedBy=multi-user.target

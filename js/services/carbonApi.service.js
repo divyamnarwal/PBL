@@ -3,6 +3,17 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+export async function getRecommendationTargets() {
+  const response = await fetch(`${API_BASE_URL}/recommendations/targets`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch recommendation targets');
+  }
+
+  return response.json();
+}
+
 /**
  * Fetch active recommendations for a building
  * @param {string} buildingId - Building identifier

@@ -352,18 +352,27 @@ class RealTimeMonitor {
    */
   formatTime(timestamp, shortFormat = false) {
     const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return '--';
+    }
+
+    if (shortFormat) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
     const now = new Date();
     const diffSeconds = Math.floor((now - date) / 1000);
+
+    // Small clock drift between the sensor source and browser should not render as negative "ago" text.
+    if (diffSeconds <= 1) {
+      return 'just now';
+    }
 
     if (diffSeconds < 60) {
       return `${diffSeconds} seconds ago`;
     } else if (diffSeconds < 3600) {
       const minutes = Math.floor(diffSeconds / 60);
       return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    }
-
-    if (shortFormat) {
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
 
     return date.toLocaleString();

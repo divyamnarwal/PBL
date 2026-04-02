@@ -1,6 +1,7 @@
 // ===============================================
 // CARBON NEUTRALITY - MAIN APP.JS
 // ===============================================
+import { getDashboardChatStatus, sendDashboardChatMessage } from '/js/chat-api.service.js';
 
 // ===== THEME & NAVIGATION =====
 const htmlEl = document.documentElement;
@@ -1457,6 +1458,214 @@ const insightsForecastEl = document.getElementById("ins-forecast");
 const insightsTreesEl = document.getElementById("ins-trees");
 const insightsTopEl = document.getElementById("ins-top");
 const insightsTipEl = document.getElementById("ins-tip");
+const chatToggleBtn = document.getElementById("dashboard-chat-toggle");
+const chatPanelEl = document.getElementById("dashboard-chat-panel");
+const chatCloseBtn = document.getElementById("dashboard-chat-close");
+const chatMessagesEl = document.getElementById("dashboard-chat-messages");
+const chatFormEl = document.getElementById("dashboard-chat-form");
+const chatInputEl = document.getElementById("dashboard-chat-input");
+const chatStatusEl = document.getElementById("dashboard-chat-status");
+const chatSendBtn = document.getElementById("dashboard-chat-send");
+
+let chatHistory = [];
+let isChatRequestPending = false;
+let isChatConfigured = true;
+
+function initializeDashboardChat() {
+  if (!chatToggleBtn || !chatPanelEl || !chatMessagesEl || !chatFormEl || !chatInputEl) {
+    return;
+  }
+
+  renderChatMessage(
+    'assistant',
+    'Ask me about your live CO2, footprint, trip plan, or insights. I only answer from the dashboard data you already have, plus grounded carbon-reduction guidance.'
+  );
+  refreshChatAvailability();
+
+  chatToggleBtn.addEventListener("click", () => {
+    const willOpen = chatPanelEl.hidden;
+    chatPanelEl.hidden = !willOpen;
+    if (willOpen) {
+      chatInputEl.focus();
+    }
+  });
+
+  chatCloseBtn?.addEventListener("click", () => {
+    chatPanelEl.hidden = true;
+  });
+
+  chatFormEl.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (isChatRequestPending) return;
+
+    if (!isChatConfigured) {
+      renderChatMessage('assistant', 'Chat is unavailable until OPENROUTER_API_KEY is added on the backend.');
+      return;
+    }
+
+    const message = chatInputEl.value.trim();
+    if (!message) return;
+
+    renderChatMessage('user', message);
+    chatInputEl.value = '';
+    setChatPendingState(true);
+
+    try {
+      const response = await sendDashboardChatMessage({
+        message,
+        dashboardContext: buildDashboardChatContext(),
+        conversation: chatHistory.slice(-6)
+      });
+
+      chatHistory.push({ role: 'user', content: message });
+      chatHistory.push({ role: 'assistant', content: response.answer });
+      chatHistory = chatHistory.slice(-8);
+
+      renderChatMessage('assistant', response.answer);
+      updateChatStatus(response);
+    } catch (error) {
+      renderChatMessage('assistant', error.message || 'Chat service is unavailable right now.');
+      if (chatStatusEl) {
+        chatStatusEl.textContent = error.message || 'Chat service unavailable.';
+      }
+    } finally {
+      setChatPendingState(false);
+    }
+  });
+}
+
+async function refreshChatAvailability() {
+  if (!chatStatusEl) return;
+
+  try {
+    const status = await getDashboardChatStatus();
+    isChatConfigured = Boolean(status.configured);
+    chatStatusEl.textContent = isChatConfigured
+      ? `Grounded chat ready via ${status.provider}/${status.model}.`
+      : 'Chat unavailable until the backend OpenRouter API key is added.';
+  } catch (error) {
+    isChatConfigured = false;
+    chatStatusEl.textContent = 'Chat status unavailable right now.';
+  }
+}
+
+function buildDashboardChatContext() {
+  const liveLocation = document.getElementById("prediction-location")?.textContent?.trim();
+  const currentLocation = (document.getElementById("sensor-type") ? 'lab-1' : '') || liveLocation || 'lab-1';
+  const liveStatusText = document.getElementById("status-text")?.textContent?.trim() || '';
+  const sensorStatus = document.getElementById("sensor-status")?.textContent?.trim() || '';
+  const currentPpmText = document.getElementById("co2-value")?.textContent?.trim() || '';
+  const footprintTips = fpTipsEl?.textContent
+    ? fpTipsEl.textContent.split('|').map((tip) => tip.trim()).filter(Boolean)
+    : [];
+
+  const travelStats = calculatePlanStatistics(travelLegs);
+  const travelRecommendations = Array.from(tRecsEl?.querySelectorAll('li') || [])
+    .map((item) => item.textContent.trim())
+    .filter(Boolean);
+
+  return {
+    liveCo2: {
+      currentPpm: Number.parseInt(currentPpmText, 10) || null,
+      quality: document.getElementById("co2-quality")?.textContent?.trim() || '',
+      statusText: liveStatusText,
+      sensorStatus,
+      sensorType: document.getElementById("sensor-type")?.textContent?.trim() || '',
+      location: currentLocation,
+      lastUpdate: document.getElementById("last-update")?.textContent?.trim() || '',
+      isSimulationMode: liveStatusText.includes('Simulation Mode')
+    },
+    footprint: {
+      totalText: fpTotalEl?.textContent?.trim() || '',
+      totalTonsPerYear: parseFootprintTotal(fpTotalEl?.textContent),
+      tips: footprintTips,
+      inputs: {
+        carKmPerWeek: Number(fpCarEl?.value) || 0,
+        flightHoursPerYear: Number(fpFlightsEl?.value) || 0,
+        electricityBillPerMonth: Number(fpElectricityEl?.value) || 0,
+        shoppingSpendPerMonth: Number(fpShoppingEl?.value) || 0,
+        diet: fpDietEl?.value || ''
+      }
+    },
+    travelPlan: {
+      legCount: travelLegs.length,
+      totalEmissionKg: travelStats.totalEmission,
+      totalTrips: travelStats.totalTrips,
+      totalDistanceKm: travelStats.totalDistance,
+      topContributor: travelStats.topContributor,
+      recommendations: travelRecommendations,
+      legs: travelLegs.map((leg) => ({
+        origin: leg.origin,
+        destination: leg.dest,
+        mode: leg.mode,
+        trips: leg.trips,
+        months: leg.months,
+        distanceKm: leg.distance,
+        emissionPerTripKg: leg.emissionPerTrip
+      }))
+    },
+    insights: {
+      forecastText: insightsForecastEl?.textContent?.trim() || '',
+      treesText: insightsTreesEl?.textContent?.trim() || '',
+      topContributorText: insightsTopEl?.textContent?.trim() || '',
+      actionableTip: insightsTipEl?.textContent?.trim() || ''
+    },
+    recommendations: {
+      buildingId: currentLocation,
+      summary: []
+    }
+  };
+}
+
+function parseFootprintTotal(totalText = '') {
+  const parsed = Number.parseFloat(String(totalText).replace(/[^\d.]/g, ''));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function renderChatMessage(role, text) {
+  if (!chatMessagesEl) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = role === 'user' ? 'flex justify-end' : 'flex justify-start';
+
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${role}`;
+  bubble.textContent = text;
+
+  wrapper.appendChild(bubble);
+  chatMessagesEl.appendChild(wrapper);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+function updateChatStatus(response) {
+  if (!chatStatusEl) return;
+
+  const warnings = Array.isArray(response.warnings) ? response.warnings : [];
+  if (warnings.length) {
+    chatStatusEl.textContent = warnings.join(' ');
+    return;
+  }
+
+  const used = response.usedContext || {};
+  const usedKeys = Object.entries(used)
+    .filter(([, value]) => Boolean(value))
+    .map(([key]) => key);
+
+  chatStatusEl.textContent = usedKeys.length
+    ? `Grounded in: ${usedKeys.join(', ')}.`
+    : 'Grounded answer generated with limited dashboard data.';
+}
+
+function setChatPendingState(isPending) {
+  isChatRequestPending = isPending;
+  if (chatSendBtn) {
+    chatSendBtn.disabled = isPending;
+    chatSendBtn.textContent = isPending ? 'Thinking...' : 'Send';
+  }
+  if (chatStatusEl && isPending) {
+    chatStatusEl.textContent = 'Preparing a grounded answer from your dashboard context...';
+  }
+}
 
 // ============================================================================
 // INITIALIZATION
@@ -1468,6 +1677,7 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     initializeFootprintCalculator();
     initializeTravelPlanner();
+    initializeDashboardChat();
     console.log("Carbon Neutrality app initialized");
   });
 } else {
@@ -1475,6 +1685,7 @@ if (document.readyState === 'loading') {
   setTimeout(() => {
     initializeFootprintCalculator();
     initializeTravelPlanner();
+    initializeDashboardChat();
     console.log("Carbon Neutrality app initialized");
   }, 0);
 }

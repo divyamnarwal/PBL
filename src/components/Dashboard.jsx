@@ -45,28 +45,48 @@ const sectionTitleStyle = {
   borderBottom: '1px solid #e5e7eb'
 };
 
+const noticeStyle = {
+  marginBottom: '1rem',
+  padding: '0.875rem 1rem',
+  borderRadius: '0.5rem',
+  fontSize: '0.875rem',
+  lineHeight: '1.5'
+};
+
 function Dashboard() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [statusKind, setStatusKind] = useState('info');
 
   const handleBuildingSelect = (building) => {
     setSelectedBuilding(building);
     setShowRecommendations(false);
+    setStatusMessage('');
   };
 
   const handleGenerateRecommendations = async () => {
     if (!selectedBuilding) return;
 
     setIsGenerating(true);
+    setStatusMessage('');
     try {
-      await generateRecommendations(
+      const response = await generateRecommendations(
         selectedBuilding.buildingId,
         selectedBuilding.buildingType
       );
       setShowRecommendations(true);
+      setStatusKind('success');
+      setStatusMessage(
+        response.summary?.created
+          ? `Generated ${response.summary.created} recommendation(s) for ${selectedBuilding.buildingId}.`
+          : `No new recommendations were needed for ${selectedBuilding.buildingId}.`
+      );
     } catch (err) {
       console.error('Failed to generate recommendations:', err);
+      setStatusKind('error');
+      setStatusMessage(err.message || 'Failed to generate recommendations.');
     } finally {
       setIsGenerating(false);
     }
@@ -80,6 +100,19 @@ function Dashboard() {
       </p>
 
       <BuildingSelector onSelect={handleBuildingSelect} />
+
+      {statusMessage ? (
+        <div
+          style={{
+            ...noticeStyle,
+            backgroundColor: statusKind === 'error' ? '#fef2f2' : '#ecfdf5',
+            color: statusKind === 'error' ? '#b91c1c' : '#065f46',
+            border: `1px solid ${statusKind === 'error' ? '#fecaca' : '#a7f3d0'}`
+          }}
+        >
+          {statusMessage}
+        </div>
+      ) : null}
 
       {selectedBuilding && (
         <button
@@ -100,7 +133,7 @@ function Dashboard() {
       {showRecommendations && selectedBuilding && (
         <section>
           <h2 style={sectionTitleStyle}>
-            Recommendations for {selectedBuilding.buildingId}
+            Recommendations for {selectedBuilding.buildingId} ({selectedBuilding.buildingType})
           </h2>
           <RecommendationsList buildingId={selectedBuilding.buildingId} />
         </section>

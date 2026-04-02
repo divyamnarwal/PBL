@@ -62,8 +62,8 @@
           <p class="text-sm font-medium uppercase tracking-[0.25em] text-slate-500">What this adds</p>
           <h2 class="mt-3 text-3xl font-bold tracking-tight text-slate-900">Separate ML forecasting service, wired to your existing CO2 history</h2>
           <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            This screen embeds the vendored Streamlit prediction dashboard from <code>ml-dashboard/</code>.
-            It reads CO2 history from your Node API and defaults to demo forecasting until you provide a trained model file.
+            This screen now reads from the live prediction API and shows the latest forecast generated from your Mongo-backed realtime CO2 stream.
+            If the API is available, the latest predicted CO2, source reading, and forecast timing appear below.
           </p>
           <div class="mt-6 flex flex-wrap gap-3 text-sm">
             <span class="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-800">Prediction-only v1</span>
@@ -88,17 +88,17 @@
           <dl class="mt-6 space-y-3 text-sm text-slate-600">
             <div>
               <dt class="font-medium text-slate-900">Expected URL</dt>
-              <dd id="prediction-service-url" class="break-all">http://localhost:8501</dd>
+              <dd id="prediction-service-url" class="break-all">http://127.0.0.1:8010/predictions/latest</dd>
             </div>
             <div>
               <dt class="font-medium text-slate-900">Startup command</dt>
-              <dd><code>scripts/start_prediction_dashboard</code></dd>
+              <dd><code>python -m uvicorn api:app --host 127.0.0.1 --port 8010</code></dd>
             </div>
           </dl>
 
           <div class="mt-6 flex flex-wrap gap-3">
             <button id="prediction-retry" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">Retry</button>
-            <a id="prediction-open-link" href="http://localhost:8501" target="_blank" rel="noreferrer" class="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50">Open in new tab</a>
+            <a id="prediction-open-link" href="http://127.0.0.1:8010/predictions/latest" target="_blank" rel="noreferrer" class="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50">Open in new tab</a>
           </div>
         </aside>
       </section>
@@ -106,25 +106,53 @@
       <section class="mt-8 rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-2xl shadow-slate-200/70">
         <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
           <div>
-            <h2 class="text-lg font-bold text-slate-900">Embedded Streamlit Dashboard</h2>
-            <p class="text-sm text-slate-500">If the service is running, the forecasting UI loads below.</p>
+            <h2 class="text-lg font-bold text-slate-900">Latest Prediction Snapshot</h2>
+            <p class="text-sm text-slate-500">If the service is running, the newest forecast appears below.</p>
           </div>
         </div>
 
         <div id="prediction-frame-shell" hidden class="p-4">
-          <iframe
-            id="prediction-frame"
-            title="CO2 Prediction Dashboard"
-            class="min-h-[900px] w-full rounded-[1.5rem] border border-slate-200 bg-white"
-            loading="lazy"
-            referrerpolicy="no-referrer"
-          ></iframe>
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Predicted CO2</p>
+              <p id="prediction-co2" class="mt-3 text-4xl font-bold text-slate-900">--</p>
+              <p class="mt-2 text-sm text-slate-600">ppm for the next interval</p>
+            </div>
+            <div class="rounded-[1.5rem] border border-sky-200 bg-sky-50 p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Input CO2</p>
+              <p id="prediction-input-co2" class="mt-3 text-4xl font-bold text-slate-900">--</p>
+              <p class="mt-2 text-sm text-slate-600">latest observed ppm</p>
+            </div>
+            <div class="rounded-[1.5rem] border border-violet-200 bg-violet-50 p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-violet-700">Temperature</p>
+              <p id="prediction-temperature" class="mt-3 text-4xl font-bold text-slate-900">--</p>
+              <p class="mt-2 text-sm text-slate-600">degrees Celsius</p>
+            </div>
+            <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Location</p>
+              <p id="prediction-location" class="mt-3 text-2xl font-bold text-slate-900">--</p>
+              <p class="mt-2 text-sm text-slate-600">source sensor location</p>
+            </div>
+          </div>
+          <div class="mt-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Predicted for</p>
+                <p id="prediction-predicted-for" class="mt-2 text-lg font-semibold text-slate-900">--</p>
+              </div>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Generated at</p>
+                <p id="prediction-generated-at" class="mt-2 text-lg font-semibold text-slate-900">--</p>
+              </div>
+            </div>
+            <pre id="prediction-raw" class="mt-4 overflow-x-auto rounded-2xl bg-slate-900 p-4 text-xs text-slate-100"></pre>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
-  <script type="module" src="/js/auth.js"></script>
-  <script type="module" src="/js/predictions-page.js"></script>
+  <script type="module" src="/js/auth.js?v=4"></script>
+  <script type="module" src="/js/predictions-page.js?v=4"></script>
 </body>
 </html>

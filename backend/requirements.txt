@@ -1,3 +1,4 @@
 mh_z19
 paho-mqtt>=1.6,<3
+pyserial>=3.5,<4
 
