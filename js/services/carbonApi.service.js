@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
  * @returns {Promise<Object>} Response with recommendations array
  */
 export async function getActiveRecommendationsByBuilding(buildingId) {
-  const response = await fetch(`${API_BASE_URL}/recommendations/active?buildingId=${buildingId}`);
+  const response = await fetch(`${API_BASE_URL}/recommendations/active?buildingId=${encodeURIComponent(buildingId)}`);
 
   if (!response.ok) {
     const error = await response.json();
@@ -78,7 +78,7 @@ export async function resolveRecommendation(recommendationId, userId) {
  * @returns {Promise<Object>} Response with recommendations array
  */
 export async function getActiveRecommendationsByOrganization(organizationId) {
-  const response = await fetch(`${API_BASE_URL}/recommendations/active?organizationId=${organizationId}`);
+  const response = await fetch(`${API_BASE_URL}/recommendations/active?organizationId=${encodeURIComponent(organizationId)}`);
 
   if (!response.ok) {
     const error = await response.json();

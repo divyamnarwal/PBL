@@ -4,6 +4,9 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import recommendationsRoutes from './api/recommendations.routes.js';
@@ -15,16 +18,33 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Security headers
+app.use(helmet());
+
+// Rate limiting — 100 requests per 15 minutes per IP on API routes
+app.use('/api/', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false
+}));
+
+// CORS — fail-safe: require FRONTEND_URL in production
+const corsOrigin = process.env.NODE_ENV === 'production'
+  ? process.env.FRONTEND_URL || false   // false = reject all if not set
+  : ['http://localhost:3000', 'http://localhost:5000'];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL
-    : ['http://localhost:3000', 'http://localhost:5000'],  // Both Vite and Express
+  origin: corsOrigin,
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsing with size limits
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Sanitize request data against NoSQL injection
+app.use(mongoSanitize());
 
 // API routes
 console.log('Loading recommendations routes...');

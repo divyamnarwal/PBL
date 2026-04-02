@@ -190,7 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== AQI DASHBOARD (Legacy API) =====
-const WAQI_TOKEN = "c1ebca30b3f4338ff326ce803a2174bbfe4d66c4"; // Replace with your token from https://aqicn.org/api/
+// ===== AQI DASHBOARD (Legacy API) =====
+// WAQI token loaded from Vite env so secrets stay out of source control.
+const WAQI_TOKEN = typeof import.meta !== 'undefined' && import.meta.env?.VITE_WAQI_TOKEN || '';
 
 const aqiCityInput = document.getElementById("aqi-city-input");
 const aqiSearchBtn = document.getElementById("aqi-search");
@@ -394,17 +396,21 @@ function renderPollutants(pollutants) {
   const entries = Object.entries(pollutants).filter(([, value]) => value !== null && isFinite(value));
   if (!entries.length) return;
 
-  let html = "";
+  pollutantBreakdownEl.innerHTML = '';
   entries.forEach(([key, value]) => {
     const label = pollutantLabel[key] || key;
-    html += `
-      <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
-        <span class="text-xs font-medium text-gray-600 dark:text-gray-300">${label}</span>
-        <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">${Number(value).toFixed(1)}</span>
-      </div>
-    `;
+    const div = document.createElement('div');
+    div.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600';
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'text-xs font-medium text-gray-600 dark:text-gray-300';
+    labelSpan.textContent = label;
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'text-sm font-semibold text-gray-800 dark:text-gray-100';
+    valueSpan.textContent = Number(value).toFixed(1);
+    div.appendChild(labelSpan);
+    div.appendChild(valueSpan);
+    pollutantBreakdownEl.appendChild(div);
   });
-  pollutantBreakdownEl.innerHTML = html;
 }
 
 async function fetchFromLegacyAPI(city) {
@@ -751,7 +757,7 @@ function calculateFootprint() {
   if (flights > 20) tips.push("Try consolidating trips or exploring rail alternatives.");
   if (electricity > 6000) tips.push("Upgrade to energy-efficient appliances.");
   if (diet === "meat-high") tips.push("Swap a few meat meals for plant-based options each week.");
-  fpTipsEl.innerHTML = tips.length ? tips.join("<br>") : "Great job! Your footprint is relatively low.";
+  fpTipsEl.textContent = tips.length ? tips.join(" | ") : "Great job! Your footprint is relatively low.";
 
   // Update chart only if canvas is available
   const chartCtx = footprintChartCtx || document.getElementById("fp-chart");
@@ -1186,7 +1192,12 @@ function updateTravelSummary() {
   } else if (recommendations.length === 0) {
     tRecsEl.innerHTML = `<li class="text-green-600 dark:text-green-400">✓ Your travel plan looks efficient!</li>`;
   } else {
-    tRecsEl.innerHTML = recommendations.map(rec => `<li>${rec}</li>`).join("");
+    tRecsEl.innerHTML = '';
+    recommendations.forEach(rec => {
+      const li = document.createElement('li');
+      li.textContent = rec;
+      tRecsEl.appendChild(li);
+    });
   }
 
   // Update chart and insights

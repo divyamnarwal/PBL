@@ -25,6 +25,11 @@ const validateBuildingId = (req, res, next) => {
       error: 'Invalid buildingId format'
     });
   }
+  // Coerce to plain string to prevent NoSQL operator injection
+  if (buildingId) {
+    if (req.body?.buildingId) req.body.buildingId = String(buildingId);
+    if (req.query?.buildingId) req.query.buildingId = String(buildingId);
+  }
   next();
 };
 
@@ -175,6 +180,14 @@ router.get('/active', validateBuildingId, asyncHandler(async (req, res) => {
     });
   }
 
+  // Validate organizationId type and length
+  if (organizationId && (typeof organizationId !== 'string' || organizationId.length > 50)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid organizationId format'
+    });
+  }
+
   // Ensure MongoDB connection
   await mongoDBService.connect();
 
@@ -247,7 +260,7 @@ router.use((error, req, res, next) => {
   if (error.name === 'ValidationError') {
     return res.status(400).json({
       success: false,
-      error: error.message
+      error: 'Invalid input data'
     });
   }
 
